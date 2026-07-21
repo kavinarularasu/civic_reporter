@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -37,12 +37,25 @@ jobs:
       - name: Build Flutter Web
         run: flutter build web --release
 
+      - name: Build Flutter APK for Web Download
+        continue-on-error: true
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk build/web/app-release.apk
+
       - name: Upload Web App Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Civic_Reporter_Web_App
           path: build/web
           retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
