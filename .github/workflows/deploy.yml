@@ -1,4 +1,4 @@
-name: Civic Reporter Automated Test Suite & Deploy to Vercel
+name: Civic Reporter Master CI/CD Suite & App Deployment
 
 on:
   push:
@@ -6,46 +6,38 @@ on:
   workflow_dispatch:
 
 jobs:
-  run_test_suites_and_deploy:
+  master_pipeline:
+    name: Test Suites, Excel Reports, Web & Mobile Build
     runs-on: ubuntu-latest
     steps:
-      # Checkout source code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Setup Python for Automated Testing Suites
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      # Install Test Dependencies
       - name: Install Test Suite Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install openpyxl pytest requests locust
 
-      # Execute Appium Mobile Test Suite (400 Cases) & Report
       - name: Execute Appium Mobile Test Suite (400 Cases)
         run: python appium_tests/generate_full_report.py
 
-      # Execute Selenium Web Test Suite (400 Cases) & Report
       - name: Execute Selenium Web Test Suite (400 Cases)
         run: python selenium_tests/generate_full_report.py
 
-      # Execute Vulnerability Security Suite (400 Cases) & Report
       - name: Execute Vulnerability Security Suite (400 Cases)
         run: python vulnerability_tests/run_vulnerability_tests.py
 
-      # Execute Load & Baseline Performance Suite (400 Cases) & Report
       - name: Execute Load & Baseline Performance Suite (400 Cases)
         run: python load_tests/generate_report.py
 
-      # Generate Consolidated Master Excel Report (1,600 Total Cases)
       - name: Generate Consolidated Master Excel Report
         run: python generate_combined_excel_report.py
 
-      # Upload Test Reports as GitHub Actions Artifacts
       - name: Upload Excel Test Reports Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -58,26 +50,42 @@ jobs:
             Civic_Reporter_Combined_Report.xlsx
           retention-days: 30
 
-      # Set up Flutter SDK
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
-        continue-on-error: true
         with:
           channel: 'stable'
           cache: true
 
-      # Get Flutter dependencies
-      - name: Get Flutter Packages
-        continue-on-error: true
+      - name: Install Flutter Packages
         run: flutter pub get
 
-      # Build Flutter web app
-      - name: Build Flutter Web
-        continue-on-error: true
+      - name: Build Flutter Web Release
         run: flutter build web --release
 
-      # Deploy to Vercel
-      - name: Deploy to Vercel
+      - name: Upload Web App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Civic_Reporter_Web_App
+          path: build/web
+          retention-days: 30
+
+      - name: Build Flutter Mobile Release (APK)
+        run: flutter build apk --release
+
+      - name: Upload Mobile APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Civic_Reporter_Mobile_App_APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Deploy Web App to Vercel
         uses: amondnet/vercel-action@v20
         continue-on-error: true
         with:
