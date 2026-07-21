@@ -42,7 +42,9 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-        run: flutter build web --release --base-href /civic_reporter/
+        run: |
+          flutter build web --release --base-href /civic_reporter/
+          touch build/web/.nojekyll
 
       - name: Build Flutter APK for Web Download
         continue-on-error: true
