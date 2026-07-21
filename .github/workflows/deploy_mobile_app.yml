@@ -1,4 +1,5 @@
 name: Deploy Mobile App
+run-name: Deploy Mobile App
 
 on:
   push:

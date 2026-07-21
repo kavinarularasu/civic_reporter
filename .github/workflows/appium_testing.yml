@@ -1,4 +1,5 @@
 name: Appium Testing
+run-name: Appium Testing
 
 on:
   push:

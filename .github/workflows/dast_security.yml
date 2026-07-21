@@ -1,4 +1,5 @@
 name: Dast Security
+run-name: Dast Security
 
 on:
   push:

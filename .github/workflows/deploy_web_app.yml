@@ -1,4 +1,5 @@
 name: Deploy Web App
+run-name: Deploy Web App
 
 on:
   push:
