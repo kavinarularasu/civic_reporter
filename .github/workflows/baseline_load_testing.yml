@@ -1,5 +1,5 @@
-name: Basline Load Testing
-run-name: Basline Load Testing
+name: Baseline Load Testing
+run-name: Baseline Load Testing
 
 on:
   push:
