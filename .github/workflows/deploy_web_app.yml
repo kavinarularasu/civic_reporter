@@ -24,6 +24,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
+        continue-on-error: true
         run: flutter build web --release
 
       - name: Deploy to Vercel

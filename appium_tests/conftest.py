@@ -2,9 +2,15 @@
 conftest.py — Pytest hooks for result collection and Excel report generation
 """
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import pytest
 from datetime import datetime
-from report_generator import ExcelReportGenerator
+try:
+    from report_generator import ExcelReportGenerator
+except ImportError:
+    from appium_tests.report_generator import ExcelReportGenerator
 import config
 
 

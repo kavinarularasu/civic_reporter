@@ -25,7 +25,7 @@ jobs:
           pip install openpyxl pytest
 
       - name: Execute Appium 400 Test Cases
-        run: pytest appium_tests/test_extended_400_cases.py -v
+        run: pytest appium_tests/test_appium_400_cases.py -v
 
       - name: Generate Appium Excel Report & Pie Chart
         run: python appium_tests/generate_full_report.py

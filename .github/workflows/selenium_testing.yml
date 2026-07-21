@@ -25,7 +25,7 @@ jobs:
           pip install openpyxl pytest
 
       - name: Execute Selenium 400 Test Cases
-        run: pytest selenium_tests/test_extended_400_cases.py -v
+        run: pytest selenium_tests/test_selenium_400_cases.py -v
 
       - name: Generate Selenium Excel Report & Pie Chart
         run: python selenium_tests/generate_full_report.py

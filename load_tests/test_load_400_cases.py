@@ -2,7 +2,15 @@
 test_load_400_cases.py — Baseline Load Testing Suite (400 Distinct Test Cases)
 """
 import pytest
-from load_tests.generate_report import ALL_LOAD_TESTS
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+try:
+    from load_tests.generate_report import ALL_LOAD_TESTS
+except ImportError:
+    from generate_report import ALL_LOAD_TESTS
 
 LOAD_CASES = [(tc[0], tc[2]) for tc in ALL_LOAD_TESTS]
 
