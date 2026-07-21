@@ -1,0 +1,37 @@
+name: Selenium Testing
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  selenium_test_execution:
+    name: Selenium Testing (400 Test Cases)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl pytest
+
+      - name: Execute Selenium 400 Test Cases
+        run: pytest selenium_tests/test_extended_400_cases.py -v
+
+      - name: Generate Selenium Excel Report & Pie Chart
+        run: python selenium_tests/generate_full_report.py
+
+      - name: Upload Selenium Excel Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Civic_Reporter_Selenium_Test_Report
+          path: Civic_Reporter_Selenium_Test_Report.xlsx
+          retention-days: 30

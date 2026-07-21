@@ -1,0 +1,37 @@
+name: Baseline Load Testing
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  baseline_load_test_execution:
+    name: Baseline Load Testing (400 Test Cases)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl pytest locust
+
+      - name: Execute Baseline Load 400 Test Cases
+        run: pytest load_tests/test_load_400_cases.py -v
+
+      - name: Generate Load Excel Report & Pie Chart
+        run: python load_tests/generate_report.py
+
+      - name: Upload Load Excel Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Civic_Reporter_Load_Baseline_Test_Report
+          path: Civic_Reporter_Load_Baseline_Test_Report.xlsx
+          retention-days: 30
