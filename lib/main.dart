@@ -8,7 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'firebase_options.dart';
 
 // ==========================================
-// DATA MODELS & GLOBAL STATE STORE (FIREBASE INTEGRATED)
+// DATA MODELS & GLOBAL STATE STORE (OFFICER & REPORTER)
 // ==========================================
 
 class UserAccount {
@@ -16,12 +16,14 @@ class UserAccount {
   final String username;
   final String password;
   final String email;
+  final String role; // 'reporter' or 'officer'
 
   UserAccount({
     required this.name,
     required this.username,
     required this.password,
     required this.email,
+    required this.role,
   });
 }
 
@@ -32,7 +34,7 @@ class UserStore extends ChangeNotifier {
   UserAccount? _currentUser;
   UserAccount? get currentUser => _currentUser;
 
-  Future<bool> register(String name, String username, String password) async {
+  Future<bool> register(String name, String username, String password, {String role = 'reporter'}) async {
     if (username.trim().isEmpty || password.trim().isEmpty) return false;
 
     final formattedUsername = username.trim();
@@ -42,22 +44,22 @@ class UserStore extends ChangeNotifier {
     final displayName = name.trim().isEmpty ? formattedUsername : name.trim();
 
     try {
-      // 1. Create account in Firebase Authentication
+      // 1. Firebase Auth Registration
       final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // 2. Update Firebase Auth Display Name
       await userCredential.user?.updateDisplayName(displayName);
 
-      // 3. Store user record in Cloud Firestore
+      // 2. Cloud Firestore User Record
       if (userCredential.user != null) {
         await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
           'uid': userCredential.user!.uid,
           'name': displayName,
           'username': formattedUsername,
           'email': email,
+          'role': role,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
@@ -67,31 +69,32 @@ class UserStore extends ChangeNotifier {
         username: formattedUsername,
         password: password,
         email: email,
+        role: role,
       );
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Firebase Auth Register Error: ${e.code} - ${e.message}');
+      debugPrint('Firebase Auth Register Error: ${e.code}');
       if (e.code == 'email-already-in-use') {
-        // If account already exists in Firebase Auth, attempt login
-        return await login(username, password);
+        return await login(username, password, selectedRole: role);
       }
     } catch (e) {
       debugPrint('Register Error: $e');
     }
 
-    // Fallback for offline mode or network latency
+    // Fallback registration
     _currentUser = UserAccount(
       name: displayName,
       username: formattedUsername,
       password: password,
       email: email,
+      role: role,
     );
     notifyListeners();
     return true;
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String username, String password, {String selectedRole = 'reporter'}) async {
     if (username.trim().isEmpty || password.trim().isEmpty) return false;
 
     final formattedUsername = username.trim();
@@ -99,8 +102,13 @@ class UserStore extends ChangeNotifier {
         ? formattedUsername
         : '${formattedUsername.toLowerCase()}@civicreporter.org';
 
+    // Auto-assign officer role for officer/admin usernames
+    String role = selectedRole;
+    if (formattedUsername.toLowerCase() == 'officer' || formattedUsername.toLowerCase() == 'admin') {
+      role = 'officer';
+    }
+
     try {
-      // 1. Sign in with Firebase Authentication
       final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -108,26 +116,30 @@ class UserStore extends ChangeNotifier {
 
       final firebaseUser = userCredential.user;
       final displayName = firebaseUser?.displayName ??
-          (formattedUsername.toLowerCase() == 'kavin' ? 'Kavin Kumar' : formattedUsername);
+          (formattedUsername.toLowerCase() == 'kavin'
+              ? 'Kavin Kumar'
+              : (role == 'officer' ? 'Ward Officer' : formattedUsername));
 
       _currentUser = UserAccount(
         name: displayName,
         username: formattedUsername,
         password: password,
         email: email,
+        role: role,
       );
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase Auth Login Exception: ${e.code}');
-      // If user does not exist in Firebase Auth yet, auto-register in Firebase Auth!
       if (e.code == 'user-not-found' || e.code == 'invalid-credential' || e.code == 'channel-error') {
         try {
           final newCred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: email,
             password: password,
           );
-          final displayName = formattedUsername.toLowerCase() == 'kavin' ? 'Kavin Kumar' : formattedUsername;
+          final displayName = formattedUsername.toLowerCase() == 'kavin'
+              ? 'Kavin Kumar'
+              : (role == 'officer' ? 'Ward 42 Officer' : formattedUsername);
           await newCred.user?.updateDisplayName(displayName);
 
           if (newCred.user != null) {
@@ -136,6 +148,7 @@ class UserStore extends ChangeNotifier {
               'name': displayName,
               'username': formattedUsername,
               'email': email,
+              'role': role,
               'createdAt': FieldValue.serverTimestamp(),
             });
           }
@@ -145,6 +158,7 @@ class UserStore extends ChangeNotifier {
             username: formattedUsername,
             password: password,
             email: email,
+            role: role,
           );
           notifyListeners();
           return true;
@@ -156,13 +170,16 @@ class UserStore extends ChangeNotifier {
       debugPrint('Login Error: $e');
     }
 
-    // Local authentication check as fallback
-    if (password == 'kavin@2805' || password.length >= 6) {
+    // Fallback credential validation
+    if (password == 'kavin@2805' || password == 'officer@2805' || password.length >= 6) {
       _currentUser = UserAccount(
-        name: formattedUsername.toLowerCase() == 'kavin' ? 'Kavin Kumar' : formattedUsername,
+        name: formattedUsername.toLowerCase() == 'kavin'
+            ? 'Kavin Kumar'
+            : (role == 'officer' ? 'Ward 42 Officer' : formattedUsername),
         username: formattedUsername,
         password: password,
         email: email,
+        role: role,
       );
       notifyListeners();
       return true;
@@ -199,6 +216,8 @@ class ReportModel {
   final String submittedBy;
   final double latitude;
   final double longitude;
+  final String? assignedCrew;
+  final String? officerNote;
 
   ReportModel({
     required this.id,
@@ -217,6 +236,8 @@ class ReportModel {
     required this.submittedBy,
     required this.latitude,
     required this.longitude,
+    this.assignedCrew,
+    this.officerNote,
   });
 }
 
@@ -231,14 +252,13 @@ class ReportStore extends ChangeNotifier {
   int get totalCount => _reports.length;
   int get inProgressCount => _reports.where((r) => r.status == 'In Progress').length;
   int get resolvedCount => _reports.where((r) => r.status == 'Resolved').length;
-  int get submittedCount => _reports.where((r) => r.status == 'Submitted').length;
+  int get submittedCount => _reports.where((r) => r.status == 'Submitted' || r.status == 'Acknowledged').length;
   int get rejectedCount => _reports.where((r) => r.status == 'Rejected').length;
 
   Future<void> addReport(ReportModel report) async {
     _reports.insert(0, report);
     notifyListeners();
 
-    // Sync directly to Cloud Firestore Database
     try {
       final user = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection('reports').doc(report.id).set({
@@ -258,13 +278,12 @@ class ReportStore extends ChangeNotifier {
         'longitude': report.longitude,
         'createdAt': FieldValue.serverTimestamp(),
       });
-      debugPrint('Report ${report.id} successfully synced to Cloud Firestore!');
     } catch (e) {
-      debugPrint('Cloud Firestore Report Sync Error: $e');
+      debugPrint('Firestore Sync Error: $e');
     }
   }
 
-  void updateReportStatus(String id, String newStatus) {
+  void updateReportStatus(String id, String newStatus, {String? assignedCrew, String? officerNote}) {
     final index = _reports.indexWhere((r) => r.id == id);
     if (index != -1) {
       Color newColor = Colors.blue;
@@ -290,17 +309,20 @@ class ReportStore extends ChangeNotifier {
         submittedBy: existing.submittedBy,
         latitude: existing.latitude,
         longitude: existing.longitude,
+        assignedCrew: assignedCrew ?? existing.assignedCrew,
+        officerNote: officerNote ?? existing.officerNote,
       );
       notifyListeners();
 
-      // Update in Cloud Firestore
       try {
         FirebaseFirestore.instance.collection('reports').doc(id).update({
           'status': newStatus,
+          'assignedCrew': assignedCrew ?? existing.assignedCrew,
+          'officerNote': officerNote ?? existing.officerNote,
           'updatedAt': FieldValue.serverTimestamp(),
         });
       } catch (e) {
-        debugPrint('Firestore status update error: $e');
+        debugPrint('Firestore update error: $e');
       }
     }
   }
@@ -454,7 +476,7 @@ class _SplashScreenState extends State<SplashScreen>
 }
 
 // ==========================================
-// AUTHENTICATION: LOGIN & REGISTER SCREEN (FIREBASE AUTH)
+// AUTHENTICATION: LOGIN & REGISTER SCREEN (ROLES SUPPORT)
 // ==========================================
 
 class LoginScreen extends StatefulWidget {
@@ -469,6 +491,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
 
+  String _selectedRole = 'reporter'; // 'reporter' or 'officer'
   bool _isSignUp = false;
   bool _isLoading = false;
 
@@ -499,21 +522,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_isSignUp) {
-        bool success = await UserStore.instance.register(name, username, password);
+        bool success = await UserStore.instance.register(name, username, password, role: _selectedRole);
         if (!mounted) return;
         setState(() => _isLoading = false);
 
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registered in Firebase Auth & Firestore! Welcome!'),
+            SnackBar(
+              content: Text('Account created as ${_selectedRole == 'officer' ? 'Municipal Officer' : 'Reporter'}!'),
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeDashboard()),
-          );
+          _navigateToDashboard();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -523,22 +543,12 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } else {
-        bool success = await UserStore.instance.login(username, password);
+        bool success = await UserStore.instance.login(username, password, selectedRole: _selectedRole);
         if (!mounted) return;
         setState(() => _isLoading = false);
 
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Authenticated with Firebase!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 1),
-            ),
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeDashboard()),
-          );
+          _navigateToDashboard();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -561,6 +571,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _navigateToDashboard() {
+    final currentUser = UserStore.instance.currentUser;
+    if (currentUser?.role == 'officer') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const OfficerDashboardScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeDashboard()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -571,36 +596,118 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Center(
                 child: Container(
-                  width: 80,
-                  height: 80,
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A5276),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  child: const Icon(Icons.location_on,
-                      size: 45, color: Colors.white),
+                  child: const Icon(Icons.location_on, size: 40, color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
+
+              // ROLE SELECTOR TOGGLE
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F6FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedRole = 'reporter'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedRole == 'reporter'
+                                ? const Color(0xFF1A5276)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.person,
+                                size: 18,
+                                color: _selectedRole == 'reporter' ? Colors.white : Colors.grey,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Citizen / Reporter',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedRole == 'reporter' ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedRole = 'officer'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedRole == 'officer'
+                                ? const Color(0xFF1A5276)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.local_police,
+                                size: 18,
+                                color: _selectedRole == 'officer' ? Colors.white : Colors.grey,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Ward Officer',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedRole == 'officer' ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
               Text(
-                _isSignUp ? 'Create Account' : 'Welcome Back!',
+                _isSignUp
+                    ? 'Create ${_selectedRole == 'officer' ? 'Officer' : 'Reporter'} Account'
+                    : 'Sign in as ${_selectedRole == 'officer' ? 'Officer' : 'Reporter'}',
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A5276),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
-                _isSignUp
-                    ? 'Fill in your details to register in Firebase'
-                    : 'Sign in with your Username and Password',
-                style: const TextStyle(fontSize: 15, color: Colors.grey),
+                _selectedRole == 'officer'
+                    ? 'Manage, assign crews, and resolve civic complaints'
+                    : 'Report civic issues and track resolutions in your ward',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
               if (_isSignUp) ...[
                 const Text(
@@ -616,18 +723,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _nameController,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.person, color: Color(0xFF1A5276)),
-                    hintText: 'e.g. Kavin Kumar',
+                    hintText: _selectedRole == 'officer' ? 'e.g. Officer Ramesh' : 'e.g. Kavin Kumar',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: Color(0xFF1A5276), width: 2),
+                      borderSide: const BorderSide(color: Color(0xFF1A5276), width: 2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
               ],
 
               const Text(
@@ -649,12 +755,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                        color: Color(0xFF1A5276), width: 2),
+                    borderSide: const BorderSide(color: Color(0xFF1A5276), width: 2),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               const Text(
                 'Password',
                 style: TextStyle(
@@ -675,8 +780,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                        color: Color(0xFF1A5276), width: 2),
+                    borderSide: const BorderSide(color: Color(0xFF1A5276), width: 2),
                   ),
                 ),
               ),
@@ -694,16 +798,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2)
+                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                       : Text(
-                          _isSignUp ? 'Sign Up (Firebase)' : 'Log In (Firebase)',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                          _isSignUp
+                              ? 'Sign Up as ${_selectedRole == 'officer' ? 'Officer' : 'Reporter'}'
+                              : 'Log In as ${_selectedRole == 'officer' ? 'Officer' : 'Reporter'}',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -712,9 +816,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                   child: Text(
-                    _isSignUp
-                        ? 'Already have an account? Log In'
-                        : 'Don\'t have an account? Sign Up',
+                    _isSignUp ? 'Already have an account? Log In' : 'Don\'t have an account? Sign Up',
                     style: const TextStyle(
                       color: Color(0xFF1A5276),
                       fontWeight: FontWeight.bold,
@@ -731,7 +833,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 // ==========================================
-// HOME DASHBOARD & NAVIGATION
+// REPORTER DASHBOARD & NAVIGATION
 // ==========================================
 
 class HomeDashboard extends StatefulWidget {
@@ -782,8 +884,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt), label: 'My Reports'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'My Reports'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
@@ -825,8 +926,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => const WardStatsScreen()),
+                MaterialPageRoute(builder: (context) => const WardStatsScreen()),
               );
             },
           ),
@@ -835,8 +935,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => const NotificationScreen()),
+                MaterialPageRoute(builder: (context) => const NotificationScreen()),
               );
             },
           ),
@@ -938,8 +1037,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.assignment_outlined,
-                              size: 48, color: Colors.grey.shade400),
+                          Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade400),
                           const SizedBox(height: 12),
                           const Text(
                             'No reports submitted yet',
@@ -959,9 +1057,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       ),
                     )
                   else
-                    ...store.reports
-                        .take(5)
-                        .map((report) => _issueCard(report)),
+                    ...store.reports.take(5).map((report) => _issueCard(report)),
                   const SizedBox(height: 80),
                 ],
               ),
@@ -998,10 +1094,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         child: Column(
           children: [
             Text(number,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
+                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             Text(label,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70, fontSize: 11)),
@@ -1084,27 +1177,21 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     children: [
                       Text(report.type,
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Color(0xFF1A5276))),
+                              fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A5276))),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: report.statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(report.status,
                             style: TextStyle(
-                                fontSize: 11,
-                                color: report.statusColor,
-                                fontWeight: FontWeight.w600)),
+                                fontSize: 11, color: report.statusColor, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(report.location,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(report.location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 2),
                   Text('${report.id} • ${report.time}',
                       style: const TextStyle(fontSize: 11, color: Colors.grey)),
@@ -1120,7 +1207,540 @@ class _HomeDashboardState extends State<HomeDashboard> {
 }
 
 // ==========================================
-// REPORT AN ISSUE SCREEN (REAL CAMERA & GPS & FIRESTORE)
+// MUNICIPAL WARD OFFICER DASHBOARD & ACTIONS
+// ==========================================
+
+class OfficerDashboardScreen extends StatefulWidget {
+  const OfficerDashboardScreen({super.key});
+
+  @override
+  State<OfficerDashboardScreen> createState() => _OfficerDashboardScreenState();
+}
+
+class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
+  String _selectedFilter = 'All';
+  final List<String> _filters = ['All', 'Submitted', 'In Progress', 'Resolved', 'Rejected'];
+
+  @override
+  void initState() {
+    super.initState();
+    ReportStore.instance.addListener(_onStoreChanged);
+  }
+
+  @override
+  void dispose() {
+    ReportStore.instance.removeListener(_onStoreChanged);
+    super.dispose();
+  }
+
+  void _onStoreChanged() {
+    if (mounted) setState(() {});
+  }
+
+  List<ReportModel> get _filteredReports {
+    final reports = ReportStore.instance.reports;
+    if (_selectedFilter == 'All') return reports;
+    if (_selectedFilter == 'Submitted') {
+      return reports.where((r) => r.status == 'Submitted' || r.status == 'Acknowledged').toList();
+    }
+    return reports.where((r) => r.status == _selectedFilter).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = ReportStore.instance;
+    final officer = UserStore.instance.currentUser;
+    final officerName = officer != null ? officer.name : 'Officer';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1A5276),
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Officer Portal — Ward 42',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Logged in as $officerName',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A5276),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _officerStat('${store.totalCount}', 'Total', Colors.white),
+                _officerStat('${store.submittedCount}', 'Pending', Colors.yellow.shade200),
+                _officerStat('${store.inProgressCount}', 'In Progress', Colors.orange.shade200),
+                _officerStat('${store.resolvedCount}', 'Resolved', Colors.green.shade200),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _filters.length,
+              itemBuilder: (context, index) {
+                final filter = _filters[index];
+                final isSelected = _selectedFilter == filter;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedFilter = filter),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF1A5276) : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? const Color(0xFF1A5276) : Colors.grey.shade300,
+                      ),
+                    ),
+                    child: Text(filter,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected ? Colors.white : Colors.grey.shade700)),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _filteredReports.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_outline, size: 64, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No $_selectedFilter complaints for Ward 42',
+                          style: TextStyle(fontSize: 16, color: Colors.grey.shade500),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filteredReports.length,
+                    itemBuilder: (context, index) {
+                      final report = _filteredReports[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OfficerActionScreen(report: report),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2)),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: report.iconColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(report.icon, color: report.iconColor, size: 22),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(report.type,
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: Color(0xFF1A5276))),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: report.statusColor.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(20),
+                                              ),
+                                              child: Text(report.status,
+                                                  style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: report.statusColor,
+                                                      fontWeight: FontWeight.bold)),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(report.location,
+                                            style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                        Text('Reported by: ${report.submittedBy} • ${report.time}',
+                                            style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    report.assignedCrew != null
+                                        ? 'Assigned: ${report.assignedCrew}'
+                                        : 'Priority: ${report.severity}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: report.assignedCrew != null
+                                          ? const Color(0xFF1A5276)
+                                          : (report.severity == 'Critical' ? Colors.red : Colors.orange),
+                                    ),
+                                  ),
+                                  const Row(
+                                    children: [
+                                      Text('Take Action',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF1A5276),
+                                              fontWeight: FontWeight.bold)),
+                                      Icon(Icons.chevron_right, size: 16, color: Color(0xFF1A5276)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _officerStat(String number, String label, Color color) {
+    return Column(
+      children: [
+        Text(number, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+      ],
+    );
+  }
+}
+
+class OfficerActionScreen extends StatefulWidget {
+  final ReportModel report;
+  const OfficerActionScreen({super.key, required this.report});
+
+  @override
+  State<OfficerActionScreen> createState() => _OfficerActionScreenState();
+}
+
+class _OfficerActionScreenState extends State<OfficerActionScreen> {
+  late String _selectedStatus;
+  String? _selectedCrew;
+  final TextEditingController _noteController = TextEditingController();
+  bool _isUpdating = false;
+
+  final List<String> _statuses = ['Acknowledged', 'In Progress', 'Resolved', 'Rejected'];
+  final List<String> _crews = [
+    'Crew A — Roads & Potholes',
+    'Crew B — Drainage & Water',
+    'Crew C — Electrical & Lights',
+    'Crew D — Sanitation & Waste',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStatus = widget.report.status;
+    _selectedCrew = widget.report.assignedCrew;
+    if (widget.report.officerNote != null) {
+      _noteController.text = widget.report.officerNote!;
+    }
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateStatus() async {
+    setState(() => _isUpdating = true);
+
+    ReportStore.instance.updateReportStatus(
+      widget.report.id,
+      _selectedStatus,
+      assignedCrew: _selectedCrew,
+      officerNote: _noteController.text.trim(),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+
+    setState(() => _isUpdating = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Status updated to "$_selectedStatus"! Synced to Firestore.'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1A5276),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(widget.report.id,
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: widget.report.iconColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(widget.report.icon, color: widget.report.iconColor, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.report.type,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A5276))),
+                            Text(widget.report.location,
+                                style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                            Text('Submitted by: ${widget.report.submittedBy}',
+                                style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Description: ${widget.report.description}',
+                      style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Update Complaint Status',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A5276))),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 2.8,
+              ),
+              itemCount: _statuses.length,
+              itemBuilder: (context, index) {
+                final s = _statuses[index];
+                final isSelected = _selectedStatus == s;
+                Color sColor = Colors.blue;
+                if (s == 'In Progress') sColor = Colors.orange;
+                if (s == 'Resolved') sColor = Colors.green;
+                if (s == 'Rejected') sColor = Colors.red;
+
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedStatus = s),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSelected ? sColor.withValues(alpha: 0.15) : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected ? sColor : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(s,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? sColor : Colors.grey.shade700)),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            const Text('Assign Field Crew',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A5276))),
+            const SizedBox(height: 12),
+            ..._crews.map((crew) {
+              final isSelected = _selectedCrew == crew;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedCrew = crew),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF1A5276).withValues(alpha: 0.08) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? const Color(0xFF1A5276) : Colors.grey.shade200,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.group,
+                          color: isSelected ? const Color(0xFF1A5276) : Colors.grey, size: 20),
+                      const SizedBox(width: 12),
+                      Text(crew,
+                          style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? const Color(0xFF1A5276) : Colors.grey.shade700)),
+                      const Spacer(),
+                      if (isSelected)
+                        const Icon(Icons.check_circle, color: Color(0xFF1A5276), size: 18),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 24),
+            const Text('Officer Note / Citizen Notification',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A5276))),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _noteController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Add an official update for the citizen...',
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF1A5276), width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton(
+                onPressed: _isUpdating ? null : _updateStatus,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A5276),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isUpdating
+                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.send, size: 20),
+                          SizedBox(width: 10),
+                          Text('Update & Sync to Cloud',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// REPORT AN ISSUE SCREEN (CAMERA, GPS & FIRESTORE)
 // ==========================================
 
 class ReportIssueScreen extends StatefulWidget {
@@ -1318,7 +1938,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       longitude: _longitude,
     );
 
-    // Save locally and sync to Cloud Firestore
     await ReportStore.instance.addReport(newReport);
 
     if (!mounted) return;
@@ -1953,13 +2572,13 @@ class ReportDetailScreen extends StatelessWidget {
       {
         'step': 'In Progress',
         'time': report.status == 'In Progress' || report.status == 'Resolved' ? 'In Action' : 'Pending',
-        'note': 'Field crew dispatched to location',
+        'note': report.assignedCrew != null ? 'Assigned to ${report.assignedCrew}' : 'Field crew dispatched',
         'done': report.status == 'In Progress' || report.status == 'Resolved',
       },
       {
         'step': 'Resolved',
         'time': report.status == 'Resolved' ? 'Completed' : 'Pending',
-        'note': 'Issue fixed and verified',
+        'note': 'Issue fixed and verified by Ward Officer',
         'done': report.status == 'Resolved',
       },
     ];
@@ -2047,6 +2666,10 @@ class ReportDetailScreen extends StatelessWidget {
                   _detailRow(Icons.apartment, report.ward),
                   _detailRow(Icons.calendar_today, report.date),
                   _detailRow(Icons.person, 'Reported by: ${report.submittedBy}'),
+                  if (report.assignedCrew != null)
+                    _detailRow(Icons.group, 'Assigned Crew: ${report.assignedCrew}'),
+                  if (report.officerNote != null && report.officerNote!.isNotEmpty)
+                    _detailRow(Icons.note_alt, 'Officer Note: ${report.officerNote}'),
                   _detailRow(Icons.description, report.description),
                 ],
               ),
@@ -2339,7 +2962,7 @@ class MapGridPainter extends CustomPainter {
 }
 
 // ==========================================
-// PROFILE SCREEN
+// PROFILE SCREEN (WITH ROLE BADGE & SWITCH)
 // ==========================================
 
 class ProfileScreen extends StatelessWidget {
@@ -2348,9 +2971,10 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = UserStore.instance.currentUser;
-    final userName = user != null ? user.name : 'Citizen User';
+    final userName = user != null ? user.name : 'User';
     final userHandle = user != null ? '@${user.username}' : '@user';
     final userEmail = user != null ? user.email : 'user@civicreporter.org';
+    final isOfficer = user != null && user.role == 'officer';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -2376,10 +3000,10 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 40,
-                    backgroundColor: Color(0xFF1A5276),
-                    child: Icon(Icons.person, size: 45, color: Colors.white),
+                    backgroundColor: const Color(0xFF1A5276),
+                    child: Icon(isOfficer ? Icons.local_police : Icons.person, size: 45, color: Colors.white),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -2388,7 +3012,23 @@ class ProfileScreen extends StatelessWidget {
                         fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A5276)),
                   ),
                   Text(userHandle, style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isOfficer ? Colors.orange.withValues(alpha: 0.15) : const Color(0xFF1A5276).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isOfficer ? '👮 Municipal Ward Officer' : '🙋 Citizen Reporter',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isOfficer ? Colors.orange.shade800 : const Color(0xFF1A5276),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   Text(userEmail, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
@@ -2403,25 +3043,38 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.shield_outlined, color: Color(0xFF1A5276)),
-                    title: const Text('Ward 42 — Resident'),
-                    subtitle: const Text('Anna Nagar Zone'),
+                    title: Text(isOfficer ? 'Ward 42 — Head Officer' : 'Ward 42 — Resident'),
+                    subtitle: const Text('Chennai Corporation Zone'),
                   ),
                   const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.assessment_outlined, color: Color(0xFF1A5276)),
-                    title: const Text('Ward Statistics'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const WardStatsScreen()),
-                      );
-                    },
-                  ),
+                  if (isOfficer)
+                    ListTile(
+                      leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF1A5276)),
+                      title: const Text('Officer Action Portal'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const OfficerDashboardScreen()),
+                        );
+                      },
+                    )
+                  else
+                    ListTile(
+                      leading: const Icon(Icons.assessment_outlined, color: Color(0xFF1A5276)),
+                      title: const Text('Ward Statistics'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const WardStatsScreen()),
+                        );
+                      },
+                    ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text('Log Out (Firebase)', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    title: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                     onTap: () async {
                       await UserStore.instance.logout();
                       if (context.mounted) {
@@ -2444,7 +3097,7 @@ class ProfileScreen extends StatelessWidget {
 }
 
 // ==========================================
-// WARD STATISTICS & NOTIFICATION SCREENS
+// WARD STATISTICS & NOTIFICATIONS
 // ==========================================
 
 class WardStatsScreen extends StatelessWidget {
