@@ -265,9 +265,29 @@ class UserStore extends ChangeNotifier {
 
     final String role = selectedRole;
 
-    final email = formattedUsername.contains('@')
-        ? formattedUsername
-        : '${formattedUsername.toLowerCase()}@civicreporter.gov.in';
+    // Generate consistent email and password for Firebase Auth
+    final email = role == 'officer'
+        ? '${formattedUsername.toLowerCase()}@civicreporter.gov.in'
+        : '${formattedUsername.toLowerCase()}_${mobileNumber.replaceAll(RegExp(r'\D'), '')}@civicreporter.org';
+    final firebasePassword = role == 'officer' ? password : 'citizen_password_123';
+
+    // Authenticate with Firebase Auth
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: firebasePassword,
+      );
+    } catch (e) {
+      try {
+        // If user does not exist in Auth database, create it
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: firebasePassword,
+        );
+      } catch (e2) {
+        debugPrint('Firebase Auth Login/Signup Error: $e2');
+      }
+    }
 
     _currentUser = UserAccount(
       name: role == 'officer' ? 'Ward Officer ($formattedUsername)' : formattedUsername,
@@ -465,7 +485,15 @@ class ReportStore extends ChangeNotifier {
 
   final List<ReportModel> _reports = [];
 
-  void _initRealtimeListener() {
+  void _initRealtimeListener() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      try {
+        await FirebaseAuth.instance.signInAnonymously();
+      } catch (e) {
+        debugPrint('Anonymous Auth fallback failed: $e');
+      }
+    }
+
     try {
       FirebaseFirestore.instance
           .collection('reports')
@@ -554,6 +582,14 @@ class ReportStore extends ChangeNotifier {
       _reports.insert(0, report);
     }
     notifyListeners();
+
+    if (FirebaseAuth.instance.currentUser == null) {
+      try {
+        await FirebaseAuth.instance.signInAnonymously();
+      } catch (e) {
+        debugPrint('Anonymous Auth fallback on addReport failed: $e');
+      }
+    }
 
     try {
       final user = FirebaseAuth.instance.currentUser;
