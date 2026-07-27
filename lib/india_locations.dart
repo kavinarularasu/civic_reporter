@@ -1,0 +1,307 @@
+/// Comprehensive India Location Dataset for Civic Reporter.
+/// Provides complete hierarchical mapping of all 28 States & 8 Union Territories -> Cities/Districts -> Localities/Wards.
+class IndiaLocations {
+  static const Map<String, Map<String, List<String>>> data = {
+    'Andaman & Nicobar Islands': {
+      'Port Blair': ['Aberdeen Bazaar', 'Haddo', 'Junglighat', 'Garacharma', 'Chatham', 'Dollygunj', 'Pahargaon', 'Bambooflat', 'Austinabad', 'School Line', 'Bhatubasti', 'Corbyn\'s Cove Road', 'Lamba Line', 'Sippighat', 'Nayagaon'],
+      'Car Nicobar': ['Malacca', 'Mus', 'Lapathy', 'Perka', 'Kinmai', 'Arong', 'Sawai'],
+    },
+    'Andhra Pradesh': {
+      'Visakhapatnam': ['MVP Colony', 'Siripuram', 'Gajuwaka', 'Beach Road', 'Madhurawada', 'Pendurthi', 'Dwaraka Nagar', 'Seethammadhara', 'Anakapalle', 'Bheemunipatnam', 'Gopalapatnam', 'Kancharapalem', 'Maharanipeta', 'Akkayyapalem', 'Arilova', 'Hanumanthawaka', 'Jagadamba Centre', 'Muralinagar', 'NAD Junction', 'Rushikonda', 'Steel Plant Township', 'Tagarapuvalasa', 'Vepagunta', 'Yendada'],
+      'Vijayawada': ['Benz Circle', 'Governorpet', 'Moghalrajpuram', 'Patamata', 'Gandhinagar', 'Labbipet', 'Gunadala', 'Kanthi Nagar', 'Vidyadharapuram', 'Bhavanipuram', 'Ajit Singh Nagar', 'Auto Nagar', 'Enikepadu', 'Gollapudi', 'Ibrahimpatnam', 'Kancharapalem', 'Kanuru', 'Krishna Lanka', 'Nidadavole Road', 'One Town', 'Poranki', 'Satyanarayanapuram', 'Suryaraopet', 'Tadepalli'],
+      'Guntur': ['Brodipet', 'Arundelpet', 'Kothapet', 'Pattabhipuram', 'Vidyanagar', 'Narasaraopet', 'Tenali', 'Mangalagiri', 'Amaravati Road', 'Brindavan Gardens', 'Gorantla', 'Gujjanagulla', 'Kannavarithota', 'Koritepadu', 'Nallapadu', 'Pedakakani', 'Ponnur', 'Resettlement Colony', 'Syamala Nagar', 'Tadepalle', 'Zilla Parishad Road'],
+      'Tirupati': ['Alipiri', 'KT Road', 'MR Palle', 'Renigunta Road', 'Bairagipatteda', 'Chandragiri', 'Srikalahasti', 'Korlagunta', 'Bhavani Nagar', 'Cherlopalli', 'Gokul Nagar', 'Jeevakona', 'Kapila Theertham Road', 'New Indira Nagar', 'Padmavathi Nagar', 'RC Road', 'SVU Campus Area', 'Tiruchanur', 'Tirumala Bypass', 'Vaikuntapuram'],
+      'Kakinada': ['Ramaraopet', 'Suryaraopet', 'Bhanugudi', 'Gaigolupadu', 'Jagannaickpur', 'Samalkot', 'Achampeta', 'Cinema Road', 'Gollaprolu', 'Karpada', 'Madhavapatnam', 'Main Road', 'Nagamallithota', 'Peddapuram Road', 'Ramanayyapeta', 'Sarpavaram', 'Vakalapudi'],
+      'Kurnool': ['Nandyal Road', 'Birla Compound', 'C Camp', 'Budhawara Peta', 'Adoni', 'Nandyal', 'Allagadda', 'Banganapalle', 'Dhone', 'Gowri Gopal Area', 'Kallur', 'Maddur Nagar', 'NRA Colony', 'Old Bus Stand Area', 'Panyam', 'Raj Vihar Centre', 'Sreerama Nagar', 'STBC College Area', 'Venkatramana Colony', 'Yemmiganur'],
+      'Nellore': ['Gudur', 'Kavali', 'VRC Centre', 'Magunta Layout', 'Vedayapalem', 'Subedarpet', 'Atmakur', 'Balaji Nagar', 'Current Office Centre', 'Haranathapuram', 'Kovur', 'Mypadu Road', 'Nawabpet', 'Podalakur Road', 'Ramasubba Reddy Nagar', 'Stonehouse Peta', 'Sunday Market Area', 'Tekkemitta', 'Venkatagiri'],
+      'Rajahmundry': ['Kotipalli Bus Stand', 'Danavaipeta', 'Morampudi', 'Kadiyam', 'Innespeta', 'Anaparthi', 'Aryapuram', 'Bommana Ramachandrapuram', 'Dowleswaram', 'Gowthami Nagar', 'Kovvur', 'Lalitha Nagar', 'Prakash Nagar', 'Rajahmundry East', 'Rajahmundry West', 'Syala', 'Tapeswaram'],
+      'Anantapur': ['Tower Clock Area', 'Subhash Road', 'Gulzarpet', 'Dharmavaram', 'Hindupur', 'Guntakal', 'Kadiri', 'Kalyandurg', 'Kamalanagar', 'Maruthi Nagar', 'Narpala Road', 'Prasanthi Nilayam Road', 'Rudrappanagar', 'Sai Nagar', 'Sarada Nagar', 'Tadipatri', 'Ugac Colony'],
+      'Eluru': ['Powerpet', 'RR Pet', 'Ashok Nagar', 'Tadepalligudem', 'Jangareddigudem', 'Narsapuram', 'Palakollu', 'Tanuku', 'Bhimavaram Road', 'CR Reddy College Road', 'Ganjikunta', 'Sanivarapupeta', 'Tangellamudi'],
+    },
+    'Arunachal Pradesh': {
+      'Itanagar': ['Ganga Market', 'Bank Tinali', 'Niti Vihar', 'E-Sector', 'Zero Point', 'Chimpu', 'Naharlagun', 'Banderdewa', 'Itafort Area', 'P-Sector', 'VIP Road'],
+      'Tawang': ['Old Market', 'Monastery Area', 'VVIP Colony', 'New Town', 'Jang', 'Lumla'],
+      'Pasighat': ['Main Market', 'Gensi Area', 'Miram', 'Raneghat', 'Ruksin'],
+    },
+    'Assam': {
+      'Guwahati': ['GS Road', 'Dispur', 'Ganeshguri', 'Paltan Bazaar', 'Chandmari', 'Zoo Road', 'Khanapara', 'Maligaon', 'Six Mile', 'Pan Bazaar', 'Amingaon', 'Azara', 'Bamunimaidam', 'Beltola', 'Bhatapara', 'Geetanagar', 'Hatigaon', 'Jalukbari', 'Kahilipara', 'Lakhhtokia', 'Noonmati', 'Rehabari', 'Rukminigaon', 'Tarun Nagar', 'Uzan Bazaar'],
+      'Silchar': ['Tarapur', 'Ambicapatty', 'Rongpur', 'Malugram', 'Janiganj', 'Link Road', 'Meherpur', 'National Highway Area', 'Rangirkhari', 'Udarbond'],
+      'Dibrugarh': ['Chowkidinghee', 'Graham Bazaar', 'Amolapatty', 'Thana Chariali', 'Jalan Nagar', 'Barbaruah', 'Bairagimath', 'Kadamoni', 'Naliapool'],
+      'Jorhat': ['Gar Ali', 'AT Road', 'Tarajan', 'Na-Ali', 'Nimati Road', 'Bhogdoi Bridge Area', 'Jail Road', 'Kharikatia'],
+      'Tezpur': ['Main Bazaar', 'Mission Chariali', 'Ketekibari', 'Dekargaon', 'Bhojkhowa', 'Tribeni', 'Depargaon'],
+      'Nagaon': ['Haiborgaon', 'Daccapatty', 'Itachali', 'Kacharipatty', 'Fauzdaripatty', 'Panigaon'],
+    },
+    'Bihar': {
+      'Patna': ['Boring Road', 'Kankarbagh', 'Bailey Road', 'Patliputra Colony', 'Fraser Road', 'Rajendra Nagar', 'Danapur', 'Anisabad', 'Kumhrar', 'Ashiana Nagar', 'Phulwari Sharif', 'Bankipur', 'Bazar Samiti', 'Bhattacharya Road', 'Budh Marg', 'Exhibition Road', 'Gardanibagh', 'Gulbi Ghat Road', 'Jagdeo Path', 'Khajpura', 'Kurji', 'Mahendru', 'Nageshwar Colony', 'Raja Bazar', 'Saguna More', 'Shastri Nagar', 'SK Nagar'],
+      'Gaya': ['Civil Lines', 'AP Colony', 'Manpur', 'Bairagi', 'Bodh Gaya', 'Kashinath Road', 'Chand Chaura', 'Delha', 'Gautam Buddha Road', 'Nutan Nagar', 'Ramlila Ground Area', 'Swarajpuri Road'],
+      'Muzaffarpur': ['Motijheel', 'Kazi Mohammadpur', 'Brahmapura', 'Ahiyapur', 'Mithanpura', 'Ganiyan', 'Bairgania', 'Bela Industrial Area', 'Gobarsahi', 'Jawaharlal Road', 'Marippur', 'Sutapatti'],
+      'Bhagalpur': ['Khanjarpur', 'Tilkamanjhi', 'Zero Mile', 'Adampur', 'Nathnagar', 'Bari Khanjarpur', 'Bhagalpur Junction Area', 'Champanagar', 'Mirjanhat', 'Sabour'],
+      'Darbhanga': ['Laheriasarai', 'Tower Chowk', 'Donar', 'Kadabad', 'Benta', 'Allalpatti', 'Barauni Road Area', 'Darbhanga Medical College Area', 'Dighi West', 'Mirzapur'],
+      'Purnia': ['Line Bazaar', 'Madhubani', 'Rambagh', 'Gulabbagh', 'Bhatta Bazaar', 'Navratan Hata', 'Polytechnic Chowk'],
+      'Arrah': ['Babu Bazaar', 'Katira', 'Anaith', 'Chowk Area', 'Gopali Chowk', 'Koilwar', 'Nawada'],
+    },
+    'Chandigarh': {
+      'Chandigarh': ['Sector 17', 'Sector 22', 'Sector 35', 'Sector 43', 'Sector 8', 'Sector 15', 'Sector 34', 'Sector 7', 'Manimajra', 'Industrial Area Phase 1', 'Industrial Area Phase 2', 'Sector 9', 'Sector 10', 'Sector 11', 'Sector 18', 'Sector 19', 'Sector 20', 'Sector 21', 'Sector 26', 'Sector 32', 'Sector 36', 'Sector 37', 'Sector 38', 'Sector 40', 'Sector 44'],
+    },
+    'Chhattisgarh': {
+      'Raipur': ['Pandri', 'Shankar Nagar', 'Civil Lines', 'Telibandha', 'Tatibandh', 'Devendra Nagar', 'Dasmatesh Nagar', 'Gudhiyari', 'Amaseoni', 'Bhanpuri', 'Chhangora Bhata', 'Dhamtari Road Area', 'Fafadih', 'Katora Talao', 'Khamardih', 'Mowa', 'Pachpedi Naka', 'VIP Road Raipur'],
+      'Bhilai': ['Civic Center', 'Sector 6', 'Sector 10', 'Nehru Nagar', 'Vaishali Nagar', 'Risali', 'Charoda', 'Bhilai 3', 'Hudco Colony', 'Junwani', 'Khurursipar', 'Priyardarshini Nagar', 'Sector 1', 'Sector 4', 'Smriti Nagar'],
+      'Bilaspur': ['Vyapar Vihar', 'Link Road', 'Civil Lines', 'Torwa', 'Mangla', 'Chakarbhatha', 'Koni', 'Minerva Talkies Area', 'New Sarkanda', 'Rajendra Nagar', 'Sarkanda', 'Sirgitti'],
+      'Korba': ['TP Nagar', 'NTPC Colony', 'Jamnipali', 'Kosabadi', 'Balco Nagar', 'Darri', ' Manikpur', 'Rajgamar'],
+      'Durg': ['Station Road', 'Ganj Para', 'Padmanabhpur', 'Borsi', 'Durg Bypass Area', 'Kachandur', 'Mohalai'],
+    },
+    'Dadra & Nagar Haveli and Daman & Diu': {
+      'Daman': ['Nani Daman', 'Moti Daman', 'Devka', 'Kachigam', 'Vapi Road', 'Dunetha', 'Bhimpore', 'Kadaiya'],
+      'Diu': ['Ghoghla', 'Main Town', 'Fudam', 'Bucharwada', 'Nagoa'],
+      'Silvassa': ['Amli', 'Kilvani', 'Naroli', 'Dokmardi', 'Samarvarni', 'Dadra', 'Masat', 'Rakholi'],
+    },
+    'Delhi (NCT)': {
+      'New Delhi': ['Connaught Place', 'Chanakyapuri', 'Barakhamba', 'Vasant Kunj', 'Chhattarpur', 'RK Puram', 'Munirka', 'Vasant Vihar', 'Green Park', 'Gole Market', 'Jor Bagh', 'Khan Market', 'Lodi Colony', 'Mahipalpur', 'Mehrauli', 'Naraina', 'Safdarjung Enclave', 'Sarojini Nagar', 'South Extension', 'Vasant Enclave'],
+      'South Delhi': ['Hauz Khas', 'Saket', 'Greater Kailash', 'Lajpat Nagar', 'Malviya Nagar', 'Nehru Place', 'Defense Colony', 'Kalkaji', 'Okhla', 'Alaknanda', 'CR Park', 'East of Kailash', 'Govindpuri', 'Jaitpur', 'Madangir', 'New Friends Colony', 'Pushp Vihar', 'Sainik Farm', 'Sangam Vihar', 'Sarita Vihar', 'Sultanpur'],
+      'North Delhi': ['Civil Lines', 'Model Town', 'Kamla Nagar', 'Chandni Chowk', 'Pitampura', 'Rohini Sector 7', 'Rohini Sector 13', 'Shalimar Bagh', 'Ashok Vihar', 'Burari', 'Derawal Nagar', 'GTB Nagar', 'Jahangirpuri', 'Kashmere Gate', 'Mukherjee Nagar', 'Narela', 'Prashant Vihar', 'Rohini Sector 3', 'Rohini Sector 9', 'Rohini Sector 18', 'Vijay Nagar'],
+      'East Delhi': ['Preet Vihar', 'Mayur Vihar Phase 1', 'Mayur Vihar Phase 3', 'Laxmi Nagar', 'Shahdara', 'Patparganj', 'Ganesh Nagar', 'Vivek Vihar', 'Anand Vihar', 'Dilshad Garden', 'Geeta Colony', 'IP Extension', 'Kalyanpuri', 'Krishna Nagar', 'Mandawali', 'Nirman Vihar', 'Pandav Nagar', 'Seelampur', 'Shakarpur', 'Vasundhara Enclave', 'Yamuna Vihar'],
+      'West Delhi': ['Rajouri Garden', 'Dwarka Sector 6', 'Dwarka Sector 12', 'Janakpuri', 'Paschim Vihar', 'Punjabi Bagh', 'Uttam Nagar', 'Tilak Nagar', 'Bali Nagar', 'Dwarka Sector 10', 'Dwarka Sector 21', 'Hari Nagar', 'Kirti Nagar', 'Mansarover Garden', 'Mayapuri', 'Nangloi', 'Naraina Vihar', 'Patel Nagar', 'Subhash Nagar', 'Vikaspuri'],
+      'Central Delhi': ['Karol Bagh', 'Paharganj', 'Rajendra Nagar', 'Patel Nagar', 'Daryaganj', 'Jhandewalan', 'Manakpura', 'Old Rajendra Nagar', 'Sadar Bazaar'],
+    },
+    'Goa': {
+      'Panaji': ['Fontainhas', 'Miramar', 'Campal', 'Altinho', 'Dona Paula', 'Bambolim', 'Caranzalem', 'Tigre', 'Bhatlem', 'St Cruz', 'Taleigao'],
+      'Margao': ['Fatorda', 'Aquem', 'Borda', 'Pajifond', 'Navelim', 'Colva Road', 'Gogol', 'Madel', 'Rawanfond'],
+      'Vasco da Gama': ['Vaddem', 'Chicalim', 'Mangor Hill', 'Baina', 'Bogmalo', 'Dabolim', 'Headland Sada'],
+      'Mapusa': ['Peddem', 'Ximer', 'Ansabhat', 'Khorlim', 'Ganeshpuri', 'Morod'],
+    },
+    'Gujarat': {
+      'Ahmedabad': ['Navrangpura', 'Satellite', 'Bodakdev', 'Prahlad Nagar', 'Maninagar', 'Vastrapur', 'SG Highway', 'Paldi', 'Sabarmati', 'Bopal', 'Chandkheda', 'Ellisbridge', 'Ambawadi', 'Asarwa', 'CG Road', 'Ghatlodiya', 'Gota', 'Gurukul', 'Jodhpur Village', 'Law Garden Area', 'Memnagar', 'Naranpura', 'Naroda', 'Nikol', 'Ranip', 'Science City Road', 'Thaltej', 'Usmanpura'],
+      'Surat': ['Adajan', 'Vesu', 'Piplod', 'Varachha', 'Athwa', 'Dumas Road', 'Katargam', 'Rander', 'Udhna', 'Bhestan', 'Althan', 'Bhatar', 'Dindoli', 'Gopipura', 'Hazira Road', 'Jahangirpura', 'Kamrej', 'Khatodara', 'Limbayat', 'Majura Gate', 'Nanpura', 'Palanpur Jakatnaka', 'Sarthana', 'Vip Road Surat'],
+      'Vadodara': ['Alkapuri', 'Gotri', 'Fatehgunj', 'Manjalpur', 'Sayajigunj', 'Vasam', 'Akota', 'Subhanpura', 'Karelibaug', 'Atladara', 'Bhayli', 'Chhani', 'Gorwa', 'Harni Road', 'Makarpura', 'Nizampura', 'OP Road', 'Pratapnagar', 'Sama-Savli Road', 'Tandalja', 'Waghodia Road'],
+      'Rajkot': ['Kalawad Road', 'Race Course', 'Yagnik Road', 'Kotharia', 'Mavdi', 'University Road', 'Bhakti Nagar', '150 Feet Ring Road', 'Amin Marg', 'Gondal Road', 'Kankot Road', 'Madhapar', 'Nana Mava', 'Railnagar', 'Raiya Road', 'Sadguru Nagar'],
+      'Gandhinagar': ['Sector 6', 'Sector 11', 'Sector 21', 'Kudasan', 'Sargasan', 'Infocity', 'Pethapur', 'Raysan', 'Sector 1', 'Sector 7', 'Sector 16', 'Sector 28', 'Vavol'],
+      'Bhavnagar': ['Waghawadi Road', 'Ghogha Circle', 'Kalanala', 'Chitra', 'Hill Drive', 'Kaliybhit', 'Subhashnagar', 'Vartej'],
+      'Jamnagar': ['Park Colony', 'Patel Nagar', 'Digvijay Plot', 'Bedi Port Road', 'Gulabnagar', 'Khambhalia Highway', 'Summair Club Road'],
+      'Junagadh': ['Joshipura', 'Motibaug', 'Zanzarda Road', 'Bilkha Road', 'Kalwa Chowk'],
+      'Anand': ['Vidyanagar', 'GIDC Area', 'Amul Dairy Road', 'Ganesh Chokdi', 'Lambhvel'],
+    },
+    'Haryana': {
+      'Gurugram': ['DLF Phase 1', 'DLF Phase 5', 'Sector 56', 'Golf Course Road', 'Sohna Road', 'Cyber City', 'Sector 14', 'Sector 23', 'Sector 45', 'Palam Vihar', 'Udyog Vihar', 'DLF Phase 2', 'DLF Phase 3', 'DLF Phase 4', 'Golf Course Extension', 'Nirvana Country', 'Sector 10', 'Sector 15', 'Sector 21', 'Sector 28', 'Sector 31', 'Sector 38', 'Sector 47', 'Sector 57', 'Sector 82', 'Sushant Lok 1'],
+      'Faridabad': ['Sector 15', 'Sector 16', 'NIT 1', 'Greater Faridabad', 'Sector 21C', 'Old Faridabad', 'Ballabhgarh', 'Greenfield Colony', 'NIT 2', 'NIT 5', 'Sector 11', 'Sector 14', 'Sector 17', 'Sector 19', 'Sector 28', 'Sector 31', 'Sector 37', 'Sector 85'],
+      'Panchkula': ['Sector 6', 'Sector 8', 'Sector 11', 'Sector 20', 'MDC Sector 5', 'Sector 15', 'Sector 2', 'Sector 4', 'Sector 7', 'Sector 10', 'Sector 12A', 'Sector 14', 'Sector 21'],
+      'Ambala': ['Ambala Cantt', 'Ambala City', 'Model Town', 'Cloth Market', 'Mahesh Nagar', 'Twin City Area'],
+      'Karnal': ['Sector 13', 'Model Town', 'Kunjpura Road', 'Urban Estate', 'Sector 6', 'Sector 7', 'Sector 9'],
+      'Panipat': ['Model Town', 'GT Road Area', 'Industrial Area', 'Sector 11', 'Sector 12', 'Sector 18'],
+      'Hisar': ['Urban Estate', 'Model Town', 'PLA Area', 'Rajgarh Road', 'Sector 13', 'Sector 14'],
+      'Rohtak': ['Model Town', 'Delhi Road Area', 'Sector 14', 'Sector 2', 'Sector 3'],
+    },
+    'Himachal Pradesh': {
+      'Shimla': ['Mall Road', 'Chotta Shimla', 'Sanjauli', 'Kasumpti', 'Summer Hill', 'Lakkar Bazaar', 'New Shimla', 'Tutu', 'Boileauganj', 'Dhalli', 'Kahlini', 'Mehli', 'Panthaghati', 'Vikas Nagar'],
+      'Dharamshala': ['McLeod Ganj', 'Kotwali Bazaar', 'Dharamkot', 'Forsyth Ganj', 'Sidhbari', 'Bhagsunag', 'Dari', 'Kachheri Adda'],
+      'Mandi': ['Samkhetar', 'Motibagh', 'Bhiuli', 'Khaliyar', 'Palace Colony', 'Sauli Khad'],
+      'Solan': ['Mall Road', 'Chambaghat', 'Deonghat', 'Saproon', 'Bypass Road Solan', 'Rabon'],
+      'Kullu / Manali': ['Mall Road Manali', 'Old Manali', 'Sarvari', 'Akhara Bazaar', 'Aleo', 'Vashisht'],
+    },
+    'Jammu & Kashmir': {
+      'Srinagar': ['Lal Chowk', 'Rajbagh', 'Karan Nagar', 'Hyderpora', 'Hazratbal', 'Bemina', 'Soura', 'Jawahar Nagar', 'Nishat', 'Batamaloo', 'Chanapora', 'GawKadal', 'Humhama', 'Khanyar', 'Nowgam', 'Sanat Nagar', 'Shalimar', 'Zadibal'],
+      'Jammu': ['Gandhi Nagar', 'Trikuta Nagar', 'Channi Himmat', 'Bakshi Nagar', 'Janipur', 'Raghunath Bazaar', 'Bahu Fort Area', 'Bari Brahmana', 'Dogra Hall', 'Gangyal', 'Kunjwani', 'Muthi', 'Paloura', 'Roop Nagar', 'Satwari', 'Sainik Colony'],
+      'Anantnag': ['Khanabal', 'KP Road', 'Nai Basti', 'Mattan Chowk', 'Ashajipora', 'Lal Chowk Anantnag'],
+      'Baramulla': ['Main Town', 'Kanispora', 'Khawaja Bagh', 'Old Town', 'Delina', 'Usmania Colony'],
+    },
+    'Jharkhand': {
+      'Ranchi': ['Main Road', 'Lalpur', 'Kanke Road', 'Doranda', 'Hinoo', 'Harmu', 'Bariatu', 'Morabadi', 'Namkum', 'Ratu Road', 'Ashok Nagar Ranchi', 'Chutia', 'Dhirpur', 'HDP Colony', 'Kokar', 'Piska Nagri', 'Tupudana'],
+      'Jamshedpur': ['Bistupur', 'Sakchi', 'Kadma', 'Sonari', 'Telco', 'Mango', 'Adityapur', 'Golmuri', 'Baridih', 'Bhubaneswari Colony', 'Burmamines', 'Gamharia', 'Jugsalai', 'Kitadih', 'Parsudih', 'Sidhgora'],
+      'Dhanbad': ['Bank More', 'Saraidhela', 'Hirapur', 'Dhansar', 'Govindpur', 'Jharia', 'Chirkunda', 'Katras', 'Koyla Nagar', 'Steel Gate'],
+      'Bokaro Steel City': ['Sector 4', 'Sector 1', 'City Centre', 'Chas', 'Sector 3', 'Sector 6', 'Sector 9', 'Sector 12'],
+      'Hazaribagh': ['NawabGanj', 'Matwari', 'Korrah', 'Canary Hill Road', 'Boddom Bazaar', 'Hurhuru'],
+    },
+    'Karnataka': {
+      'Bengaluru': ['Indiranagar', 'Koramangala', 'Whitefield', 'HSR Layout', 'Jayanagar', 'Electronic City', 'Hebbal', 'Yelahanka', 'Marathahalli', 'BTM Layout', 'Rajajinagar', 'Malleshwaram', 'Banashankari', 'Bellandur', 'Kammanahalli', 'Sarjapur Road', 'Basavanagudi', 'Benson Town', 'CV Raman Nagar', 'Domlur', 'Frazer Town', 'HBR Layout', 'HRBR Layout', 'J P Nagar', 'Kasturi Nagar', 'Kengeri', 'KR Puram', 'Mahadevapura', 'Mathikere', 'Nagarbhavi', 'RT Nagar', 'Sadashivanagar', 'Sanjay Nagar', 'Ulsoor', 'Varthur', 'Vidyaranyapura', 'Vijayanagar Bengaluru', 'Yeshwanthpur'],
+      'Mysuru': ['Gokulam', 'Vijayanagar', 'Jayalakshmipuram', 'Kuvempunagar', 'Saraswathipuram', 'Nazarbad', 'Hebbal Mysuru', 'Banni Mantap', 'Agrahara', 'Bogadi', 'Chamrajpura', 'Dattagalli', 'IIT Layout', 'JP Nagar Mysuru', 'KD Road', 'Mandi Mohalla', 'Periyapatna Road', 'Ramakrishnanagar', 'Sriramapura', 'Vidyaranyapuram'],
+      'Mangaluru': ['Bejai', 'Kodialbail', 'Kadri', 'Lalbagh', 'Falnir', 'Kulshekar', 'Surathkal', 'Urwa', 'Hampankatta', 'Attavar', 'Bendoorwell', 'Deralakatte', 'Kankanady', 'Kavoor', 'Kottara', 'Mangaladevi', 'Mannagudda', 'Morgan Gate', 'Panambur', 'Pinto Vento'],
+      'Hubballi-Dharwad': ['Vidyanagar', 'Unkal', 'Keshwapur', 'Rayapur', 'Navanagar', 'Dharwad Main', 'Sattur', 'Ashok Nagar Hubballi', 'Bengeri', 'Gokul Road', 'Hosur Hubballi', 'Kamripeth', 'Old Hubballi', 'Tarihal'],
+      'Belagavi': ['Tilakwadi', 'Khanapur Road', 'Camp Area', 'Shahapur', 'Vadgaon', 'Bhagya Nagar', 'Chidambar Nagar', 'Hindwadi', 'Jadhav Nagar', 'Khasbag', 'Sadashiv Nagar Belagavi'],
+      'Kalaburagi / Gulbarga': ['Super Market', 'Sedam Road', 'Vidya Nagar', 'Jeweji Colony', 'Afzalpur Road', 'Gubbi Colony', 'MDB Layout'],
+      'Shivamogga': ['Gopala', 'Vinoba Nagar', 'Jayanagar', 'Tilak Nagar', 'Alkola', 'Kote Road', 'Sharavathi Nagar'],
+      'Tumakuru': ['SS Puram', 'Kyathsandra', 'Batawadi', 'Gokula Extension', 'Melekote', 'Sira Road', 'Upparhalli'],
+    },
+    'Kerala': {
+      'Thiruvananthapuram': ['Kowdiar', 'Pattam', 'Vazhuthacaud', 'Palayam', 'Kazhakkoottam', 'Technopark Area', 'Vanchiyoor', 'Thampanoor', 'Sasthamangalam', 'Neyyattinkara', 'Ambalamukku', 'Attingal', 'Kumarapuram', 'Manacaud', 'Medical College Trivandrum', 'Nanthancode', 'Nemom', 'Peroorkada', 'Poojappura', 'Sreekariyam', 'Thiruvallam', 'Ulloor', 'Vellayambalam'],
+      'Kochi': ['Marine Drive', 'Edappally', 'Kakkanad', 'Fort Kochi', 'Vyttila', 'Palarivattom', 'Kaloor', 'Aluva', 'Mattancherry', 'Thrippunithura', 'Cheranalloor', 'Angamaly', 'Elamakkara', 'Ernakulam North', 'Ernakulam South', 'Kadavanthra', 'Kadavanthra Jn', 'Kalamassery', 'Maradu', 'Panampilly Nagar', 'Ravipuram', 'Thevara', 'Thoppumpady', 'Willingdon Island'],
+      'Kozhikode': ['Mavoor Road', 'West Hill', 'Elathur', 'Nallalam', 'Chevayur', 'Mananchira', 'Kallai', 'Medical College Area', 'Beypore', 'Civil Station Calicut', 'Feroke', 'Karanthur', 'Kottooli', 'Meenchanda', 'Nadavannur', 'Pantheerankavu', 'Thondayad'],
+      'Thrissur': ['Swaraj Round', 'East Fort', 'Ayyanthole', 'Pazhayanadakkavu', 'Ollur', 'Kottekad', 'Puzhakkal', 'Ambalapuram', 'Cheroor', 'Kuttanellur', 'Mannuthy', 'Patturaikkal', 'Ramavarmapuram', 'West Fort Thrissur'],
+      'Kollam': ['Chinnakada', 'Asramam', 'Kavanad', 'Kilikollur', 'Kadappakada', 'Anchalumoodu', 'Ayathil', 'Kottiyam', 'Mevaram', 'Thirumullavaram'],
+      'Kannur': ['Thana', 'Payyambalam', 'Burnacherry', 'Talap', 'Elayavoor', 'Cannannore Fort Area', 'Chala Kannur', 'Kottali', 'Pallikunnu'],
+      'Kottayam': ['Collectorate Area', 'Kanjikuzhy', 'Nagampadam', 'Nattakom', 'Kumaranalloor', 'Manarcadu', 'Rubber Board Area'],
+      'Alappuzha': ['Mullakkal', 'Punnamada', 'Kidangamparambu', 'Kalarcode', 'Ambalappuzha', 'Punnapra', 'Thathampally'],
+    },
+    'Ladakh': {
+      'Leh': ['Main Bazaar', 'Changspa', 'Choglamsar', 'Skara', 'Sankar', 'Upper Leh', 'Agling', 'Chushot', 'Spituk'],
+      'Kargil': ['Main Market', 'Baroo', 'Kurbathang', 'Biamathang', 'Minjee', 'Trespone'],
+    },
+    'Lakshadweep': {
+      'Kavaratti': ['Main Island', 'Helipad Area', 'Jetty Side', 'North End', 'South Jetty'],
+      'Agatti': ['Airport Area', 'Main Village', 'Lagoon Side'],
+    },
+    'Madhya Pradesh': {
+      'Bhopal': ['MP Nagar', 'Arera Colony', 'New Market', 'Shahpura', 'Kolar Road', 'Shyamla Hills', 'Govindpura', 'Ayodhya Bypass', 'Hoshangabad Road', 'Awadhpuri', 'Bairagarh', 'Bawadiya Kalan', 'Bhadbhada Road', 'Chuna Bhatti', 'Gulmohar Colony', 'Indrapuri', 'Jahangirabad', 'Karond', 'Kotra Sultanabad', 'Misrod', 'Old City Bhopal', 'Saket Nagar MP'],
+      'Indore': ['Vijay Nagar', 'Palasia', 'MG Road', 'Bhawarkua', 'Rau', 'Saket', 'Annapurna', 'Bengali Square', 'Rajnagar', 'AB Road', 'Airport Road Indore', 'Bicholi Mardana', 'Khandwa Road Area', 'LIG Colony', 'Mahalaxmi Nagar', 'Manorama Ganj', 'Navlakha', 'Old Palasia', 'Pardesipura', 'Rajendra Nagar Indore', 'Sudama Nagar', 'Super Corridor'],
+      'Gwalior': ['City Center', 'Lashkar', 'Morar', 'Thatipur', 'Deen Dayal Nagar', 'Hazira', 'Anand Nagar Gwalior', 'Bhind Road Area', 'Gwalior Fort Area', 'Maharaj Bada', 'Pinto Park', 'Residency Area'],
+      'Jabalpur': ['Wright Town', 'Napier Town', 'Civil Lines', 'Vijay Nagar', 'Madan Mahal', 'Gorakhpur', 'Adhartal', 'Garha', 'Ghamapur', 'Khamaria', 'Ranjhi', 'Tilhari'],
+      'Ujjain': ['Freeganj', 'Nanakheda', 'Mahakal Marg', 'Kshir Sagar', 'Agar Road', 'Dewas Road Ujjain', 'Seth Sethani Marg'],
+      'Sagar': ['Civil Lines', 'Makronia', 'Gopal Ganj', 'Katra Bazaar', 'Tili Road'],
+    },
+    'Maharashtra': {
+      'Mumbai': ['Andheri West', 'Andheri East', 'Bandra West', 'Bandra East', 'Colaba', 'Dadar', 'Borivali', 'Juhu', 'Worli', 'Ghatkopar', 'Powai', 'Malad', 'Kandivali', 'Lower Parel', 'Mulund', 'Kurla', 'Chembur', 'Santacruz', 'Byculla', 'Charni Road', 'Churchgate', 'Dharavi', 'Goregaon', 'Khar West', 'Mahim', 'Matunga', 'Parel', 'Sion', 'Vile Parle'],
+      'Pune': ['Kothrud', 'Viman Nagar', 'Hinjawadi', 'Baner', 'Shivajinagar', 'Aundh', 'Hadapsar', 'Wakad', 'Pimple Saudagar', 'Koregaon Park', 'Kalyani Nagar', 'Kharadi', 'Magarpatta', 'Katraj', 'Deccan Gymkhana', 'Bavdhan', 'Bibwewadi', 'Camp Pune', 'Dhayari', 'Karve Nagar', 'Kondhwa', 'Nigdi', 'Pimpri', 'Sangvi', 'Swargate', 'Undri', 'Warje'],
+      'Nagpur': ['Dharampeth', 'Sadar', 'Manewada', 'Civil Lines', 'Sitabuldi', 'Wardha Road', 'Ramdaspeth', 'Nandanvan', 'Hingna', 'Ayodhya Nagar', 'Besa', 'Jaripatka', 'Kalamna', 'Khamla', 'Koradi Road', 'Manewada Ring Road', 'Medical Square', 'Pratap Nagar Nagpur', 'Sonegaon'],
+      'Thane': ['Thane West', 'Ghodbunder Road', 'Majiwada', 'Kopri', 'Vartak Nagar', 'Naupada', 'Wagle Estate', 'Kalyan', 'Dombivli', 'Bhadwad', 'Bhiwandi', 'Kalwa', 'Khopat', 'Manpada', 'Mumbra', 'Ovla', 'Panchpakhadi', 'Shastri Nagar Thane', 'Tembhi Naka', 'Ulhasnagar'],
+      'Nashik': ['College Road', 'Indira Nagar', 'Panchavati', 'Satpur', 'Cidco', 'Gangapur Road', 'Pathardi Phata', 'Nashik Road', 'Ambad', 'Deolali Camp', 'Govind Nagar Nashik', 'Mahatma Nagar', 'Makhmalabad', 'Rane Nagar', 'Upnagar'],
+      'Navi Mumbai': ['Vashi', 'Nerul', 'Belapur', 'Kharghar', 'Panvel', 'Airoli', 'Seawoods', 'Sanpada', 'Ghansoli', 'CBD Belapur', 'Kamothe', 'Koparkhairane', 'Taloja', 'Ulwe'],
+      'Aurangabad / Chhatrapati Sambhaji Nagar': ['CIDCO', 'Nirala Bazar', 'Garkheda', 'Usmanpura', 'Padampura', 'Beed Bypass', 'Jalna Road Area', 'Mukundwadi', 'Railway Station Area'],
+      'Solapur': ['Saat Rasta', 'Murarji Peth', 'Juma Peth', 'Hotgi Road', 'Bhavani Peth Solapur', 'Jule Solapur', 'Navi Peth Solapur'],
+      'Kolhapur': ['Rajarampuri', 'Tarabai Park', 'Shahupuri', 'Laxmipuri', 'Rankala', 'Bavda', 'Kasba Bawada', 'Nagala Park'],
+    },
+    'Manipur': {
+      'Imphal': ['Thangal Bazaar', 'Paona Bazaar', 'Lamphelpat', 'Chingmeirong', 'Uripok', 'Singjamei', 'Kwakleithel', 'Mantripukhri', 'Yaiskul'],
+      'Churachandpur': ['Tuibong', 'New Lamka', 'Zenhang Lamka', 'Hiangtam Lamka'],
+    },
+    'Meghalaya': {
+      'Shillong': ['Police Bazaar', 'Laitumkhrah', 'Mawkhar', 'Labar', 'Upper Shillong', 'Nongthymai', 'Mawlai', 'Polo', ' Malki', 'Nongrim Hills', 'Rynjah'],
+      'Tura': ['Chandmari', 'Ringrey', 'Arai Mile', 'Hawakhana', 'New Tura'],
+    },
+    'Mizoram': {
+      'Aizawl': ['Zarkawt', 'Bara Bazaar', 'Khatla', 'Dawrpui', 'Bawngkawn', 'Chanmari', 'Durtlang', 'Kulikawn', 'Tuikual'],
+      'Lunglei': ['Venglai', 'Chandmary', 'Rahsi Veng', 'Farm Veng'],
+    },
+    'Nagaland': {
+      'Kohima': ['Main Bazaar', 'PR Hill', 'High School Colony', 'BOC Area', 'Naginimora', 'Keztekie', 'Kenyu Colony', 'Lerie Colony'],
+      'Dimapur': ['Nyamo Lotha Road', 'Duncan Basti', 'Khermahal', 'Purana Bazaar', 'Chumukedima', 'Diphupar', 'Full Nagarjan', 'Padumpukhuri'],
+    },
+    'Odisha': {
+      'Bhubaneswar': ['Saheed Nagar', 'Nayapalli', 'Jaydev Vihar', 'Patia', 'Khandagiri', 'Old Town', 'IRC Village', 'Cuttack Road', 'Chandrasekharpur', 'Rasulgarh', 'Acharya Vihar', 'Bapuji Nagar', 'Bhimatangi', 'Bodh Vihar', 'Ghatikia', 'Jagamara', 'Laxmisagar', 'Mancheswar', 'Niladri Vihar', 'Satya Nagar', 'Unit 6'],
+      'Cuttack': ['Choudhury Bazaar', 'Cantonment Road', 'CDA Sector 6', 'Link Road', 'Bada Bazaar', 'Mangalabag', 'Bidanasi', 'Chauliaganj', 'College Square', 'Jobra', 'Madhupatna', 'Ranihat', 'Sutahat'],
+      'Rourkela': ['Civil Township', 'Chhend Colony', 'Sector 5', 'Udit Nagar', 'Koel Nagar', 'Panposh', 'Basanti Colony', 'Sector 2', 'Sector 7', 'Sector 19', 'Tarkera'],
+      'Berhampur': ['Giri Road', 'Bada Bazaar', 'Kamapalli', 'Silk City Colony', 'Anand Nagar Berhampur', 'Aska Road', 'Engineering School Road'],
+      'Sambalpur': ['Budharaja', 'Ainthapali', 'Dhanupali', 'Khetrajpur', 'Bareipali', 'VSS Nagar Sambalpur'],
+    },
+    'Puducherry': {
+      'Puducherry': ['White Town', 'Heritage Town', 'Lawspet', 'Muthialpet', 'Villianur', 'Reddiarpalayam', 'Oulgaret', 'Ariyankuppam', 'Gorimedu Puducherry', 'Kalapet', 'Kirimampakkam', 'Natesan Nagar', 'Saravanan Nagar'],
+      'Karaikal': ['Main Town', 'Kottucherry', 'TR Pattinam', 'Nedungadu', 'Neravy'],
+    },
+    'Punjab': {
+      'Ludhiana': ['Sarabha Nagar', 'Model Town', 'Civil Lines', 'Ferozepur Road', 'BRS Nagar', 'Pakhowal Road', 'Dugri', 'GHG Nagar', 'Aggarwal Nagar', 'Chaura Bazaar', 'Focal Point', 'Gill Road', 'Haibowal Kalan', 'Janta Nagar', 'Kitchlu Nagar', 'Ludhiana Cantt', 'Moti Nagar Ludhiana', 'Sundar Nagar'],
+      'Amritsar': ['Mall Road', 'Ranjit Avenue', 'Lawrence Road', 'Golden Temple Area', 'Majitha Road', 'GT Road', 'Civil Lines', 'Batala Road', 'Chheharta', 'Kabir Park', 'Putlighar', 'Sultanwind Road', 'Vijay Nagar Amritsar'],
+      'Jalandhar': ['Model Town', 'Civil Lines', 'Urban Estate Phase 1', 'Urban Estate Phase 2', 'Cantt Road', 'BMC Chowk', 'Adarsh Nagar Jalandhar', ' Rama Mandi', 'Suranussi', 'Tower Enclave'],
+      'Patiala': ['Lehal', 'Model Town', 'Urban Estate', 'Tripuri', 'Baradari', 'Chotti Baradari', ' Nabha Road', 'Sirhind Road'],
+      'Mohali (SAS Nagar)': ['Phase 3B2', 'Phase 7', 'Phase 10', 'Sector 70', 'Sector 68', 'Airport Road', 'Phase 1', 'Phase 5', 'Sector 67', 'Sector 71', 'Sector 82 Mohali'],
+      'Bathinda': ['Model Town', 'Mall Road', 'GT Road Area', 'Civil Lines', 'Bibiwala Road', 'Ganeshnagar'],
+    },
+    'Rajasthan': {
+      'Jaipur': ['Malviya Nagar', 'Vaishali Nagar', 'C-Scheme', 'Raja Park', 'Mansarovar', 'Tonk Road', 'Bani Park', 'Jagatpura', 'Jhotwara', 'Vidhyadhar Nagar', 'Sodala', 'Adarsh Nagar', 'Ajmer Road Area', 'Amer Road', 'Bapunagar', 'Barkat Nagar', 'Civil Lines Jaipur', 'Durgapura', 'Gopalpura Bypass', 'Hawa Mahal Area', 'Jaipur Junction Area', 'Lalkothi', 'Mahesh Nagar', 'Nirman Nagar', 'Pratap Nagar Jaipur', 'Sangeener', 'Sethi Colony', 'Shastri Nagar Jaipur', 'Sirsi Road', 'Subhash Nagar Jaipur', 'Vidyut Nagar'],
+      'Jodhpur': ['Sardarpura', 'Ratanada', 'Shastri Nagar', 'Paota', 'Chopasni Housing Board', 'Pal Road', 'Bhagat Ki Kothi', 'Bhadwasiya', 'Circuit House Road', 'Kamla Nehru Nagar', 'Mandore', 'Residency Road Jodhpur'],
+      'Udaipur': ['Fatehpura', 'Hiran Magri', 'Panchwati', 'Shastri Circle', 'Sukher', 'Shobhagpura', 'Madhuban', 'Ambavgarh', 'Bhuwana', 'Chetak Circle', 'Goverdhan Vilas', 'Old City Udaipur', 'Sector 4 Udaipur', 'Sector 14 Udaipur'],
+      'Kota': ['Talwandi', 'Vigyan Nagar', 'Kota Junction Area', 'Dadabari', 'Mahaveer Nagar', 'Chawani Chowk', 'Gumanpura', 'Kunhari', 'Naya Pura', 'Rambagh Kota'],
+      'Bikaner': ['Jayanagar', 'Rani Bazaar', 'Karni Nagar', 'Pawan Puri', 'Bichhwal', 'Sadul Ganj', 'Vyas Colony'],
+      'Ajmer': ['Panchsheel', 'Vaishali Nagar', 'Civil Lines', 'Madan Ganj', 'Adarsh Nagar Ajmer', 'Ana Sagar Circular Road', 'Kaiser Ganj'],
+      'Bhilwara': ['Subhash Nagar', 'Bhopal Ganj', 'Azad Nagar', 'RCS Colony', 'Chittor Road Area', 'Vijay Singh Pathik Nagar'],
+    },
+    'Sikkim': {
+      'Gangtok': ['MG Marg', 'Deorali', 'Tadong', 'Development Area', 'Syamari', 'Upper Burtuk', 'Chandmari Gangtok', 'Lall Bazaar', 'Vishal Gaon'],
+      'Namchi': ['Central Park', 'Kazitar', 'Lower Namchi', 'Boomtar'],
+    },
+    'Tamil Nadu': {
+      'Ariyalur': ['Ariyalur Town', 'Jayankondam', 'Sendurai', 'Andimadam', 'Thirumanur', 'Udayarpalayam', 'Kallankurichi', 'Varadarajanpettai', 'Walajanagaram', 'T.Palur'],
+      'Chengalpattu': ['Chengalpattu Town', 'Tambaram Sanatorium', 'Chromepet South', 'Pallavaram', 'Vandalur', 'Guduvancheri', 'Maraimalai Nagar', 'Singaperumal Koil', 'Mahabalipuram / Mamallapuram', 'Maduranthakam', 'Cheyyur', 'Thiruporur', 'Kelambakkam', 'Covelong / Kovalam', 'Ottiyambakkam', 'Navalur', 'Padur', 'Thaiyur', 'Siruseri SIPCOT', 'Kayar', 'Chithamur', 'Acharapakkam', 'Kovalam Road', 'Ecr Coast', 'Pammal'],
+      'Chennai': ['Anna Nagar', 'Adyar', 'T. Nagar', 'Velachery', 'Ambattur', 'Mylapore', 'Royapettah', 'Guindy', 'Nungambakkam', 'Porur', 'Chromepet', 'Tambaram', 'Perambur', 'Kodambakkam', 'Egmore', 'Saidapet', 'Alandur', 'Sholinganallur', 'Madipakkam', 'Thiruvanmiyur', 'Vadapalani', 'Kilpauk', 'Triplicane', 'Royapuram', 'Tondiarpet', 'Washermanpet', 'Kotturpuram', 'Mogappair', 'Perungudi', 'Taramani', 'Valasaravakkam', 'Ashok Nagar', 'Broadway / GT', 'Chetpet', 'Choolaimedu', 'KK Nagar Chennai', 'Korattur', 'Manali', 'Medavakkam', 'Perumbakkam', 'Purasaivakkam', 'Selaiyur', 'Santhome', 'Shenoy Nagar', 'Vepery', 'Virugambakkam', 'West Mambalam'],
+      'Coimbatore': ['RS Puram', 'Gandhipuram', 'Peelamedu', 'Singanallur', 'Saravanampatti', 'Ramanathapuram', 'Saibaba Colony', 'Kovaipudur', 'Pollachi', 'Mettupalayam', 'Thudiyalur', 'Vadavalli', 'Sundarapuram', 'Ganapathy', 'Ukadam', 'Sivananda Colony', 'Kurusumalai', 'Athipalayam', 'Chinnavedampatti', 'Eachanari', 'Irugur', 'Kalapatti', 'Kavundampalayam', 'Kottaimedhu', 'Kundu Colony', 'Othakalmandapam', 'Perur', 'Podanur', 'Race Course Coimbatore', 'Sulur', 'TDU Colony', 'Vilandipalayam'],
+      'Cuddalore': ['Chidambaram', 'Panruti', 'Neyveli Township', 'Virudhachalam', 'Manjakuppam', 'NT Padai', 'Vadalur', 'Kattumannarkoil', 'Annamalai Nagar', 'Bhuvanagiri', 'Cuddalore OT', 'Kurinjipadi', 'Nellikuppam', 'Padaleeswarar Nagar', 'Thittakudi', 'Vridhachalam Bypass'],
+      'Dharmapuri': ['Dharmapuri Town', 'Harur', 'Palacode', 'Pennagaram', 'Pappireddipatti', 'Karimangalam', 'Nallampalli', 'Marandahalli', 'Hogenakkal Road Area', 'Kambainallur'],
+      'Dindigul': ['Palani', 'Kodaikanal Town', 'Nattam', 'Oddanchatram', 'Batlagundu', 'Begambur', 'R M Colony', 'Mendonsa Nagar', 'Dindigul Town', 'Vedasandur', 'Nilakottai', 'Gujiliamparai', 'Attur Dindigul', 'Chinnalapatti', 'Kodaikanal Lake Area', 'Nagal Nagar', 'Shanmugapuram'],
+      'Erode': ['Perundurai Road', 'BPS Road', 'Moolapalayam', 'Chithode', 'Bhavani Town', 'Gobichettipalayam', 'Surampatti', 'Kasipalayam', 'Solar', 'Thindal', 'Anthiyur', 'Chennimalai', 'Kodumudi', 'Kavindapadi', 'Modakkurichi', 'Nanjai Uthukuli', 'Perundurai Town', 'Sathy / Sathyamangalam', 'Veerappan-Chattram', 'Vellakoil Road'],
+      'Kallakurichi': ['Kallakurichi Town', 'Sankarapuram', 'Chinnasalem', 'Tirukoilur', 'Ulundurpet', 'Kalvarayan Hills Area', 'Manalurpet', 'Rishivandiyam', 'Elavanasur Kottai', 'Thyagadurgam'],
+      'Kanchipuram': ['Ennaikaran', 'Big Kanchipuram', 'Little Kanchipuram', 'Sriperumbudur', 'Walajabad', 'Kundrathur', 'Sunguvarchatram', 'Uttiramerur', 'Padappai', 'Oragadam SIPCOT', 'Pillaipakkam', 'Salavakkam', 'Somangalam', 'Thirupukuzhi', 'Vishakanchi'],
+      'Kanyakumari / Nagercoil': ['Vadasery', 'Kottar', 'Meenakshipuram', 'Marthandam', 'Kanyakumari Town', 'Suchindram', 'Colachel', 'Thuckalay', 'Ranithottam', 'Agastheeswaram', 'Aralvaimozhy', 'Asaripallam', 'Cape Comorin Area', 'Erachakulam', 'Karisangal', 'Kulasekharam', 'Nagercoil Town', 'Padmanabhapuram', 'Thiruvattar', 'Vellamodi'],
+      'Karur': ['Gandhigramam', 'Thanthonimalai', 'Kulithalai', 'Light House Corner', 'Pasupathipalayam', 'Vengamedu', 'Velayuthampalayam', 'Aravakurichi', 'Inam Karur', 'Krishnarayapuram', 'Mayanur', 'Palaya Jayankondam', 'Punnam Chatram', 'Tirukkattu Palli', 'Vennamalai'],
+      'Krishnagiri': ['Hosur Town', 'SIPCOT Phase 1 Hosur', 'SIPCOT Phase 2 Hosur', 'Denkanikottai', 'Bargur', 'Rayakottai', 'Uthangarai', 'Bagalur Road', 'Krishnagiri Town', 'Pochampalli', 'Shoolagiri', 'Thally', 'Mathur Krishnagiri', 'Zuzuvadi', 'Mookandapalli'],
+      'Madurai': ['Goripalayam', 'KK Nagar Madurai', 'Anna Nagar Madurai', 'Simmakkal', 'Tallakulam', 'Tiruparankundram', 'Sellur', 'Mattuthavani', 'Arapalayam', 'Villapuram', 'SS Colony', 'Melur', 'Thirunagar', 'Koodal Nagar', 'Pudur Madurai', 'Anaiyur', 'Avaniyapuram', 'Elumalai', 'Gnanavolipuram', 'Karuppayurani', 'Kochadai', 'Palanganatham', 'Pasumalai', 'Samayanallur', 'Sholavandan', 'Thirumangalam', 'Usilampatti', 'Vadipatti'],
+      'Mayiladuthurai': ['Mayiladuthurai Town', 'Sirkali', 'Poompuhar', 'Tharangambadi / Tranquebar', 'Kuthalam', 'Santanathapuram', 'Manakudi', 'Nallur Mayiladuthurai', 'Vaitheeswaran Koil', 'Kollidam'],
+      'Nagapattinam': ['Nagapattinam Town', 'Velankanni', 'Vedaranyam', 'Kilvelur', 'Nagore', 'Thirukkuvalai', 'Akkaraipettai', 'Keechankuppam', 'Thirupoondi', 'Voimedu'],
+      'Namakkal': ['Rasipuram', 'Paramathi Velur', 'Tiruchengode', 'Mohanur', 'Kollimalai', 'Komarapalayam', 'Park Road Namakkal', 'Namakkal Town', 'Senthamangalam', 'Puduchatram', 'Mallasamudram', 'Erumaipatti', 'Kalappanaickenpatti', 'Kabilarmalai', 'Vennandur'],
+      'Nilgiris / Ooty': ['Charing Cross Ooty', 'Coonoor Town', 'Kotagiri', 'Gudalur Nilgiris', 'Lovedale', 'Wellington Cantt', 'Ketti', 'Fingerpost', 'Aravankadu', 'Coonoor Upper Area', 'Devala', 'Doddabetta Area', 'Katteri', 'Ooty Lake Area', 'Pandalur', 'Wellington Gymkhana Area'],
+      'Perambalur': ['Perambalur Town', 'Veppanthattai', 'Kunnam', 'Alathur', 'Labbaikudikadu', 'Kurumbalur', 'Erasanai', 'Poolambadi', 'V.Kalathur', 'Esanai'],
+      'Pudukkottai': ['Pudukkottai Town', 'Aranthangi', 'Karaikudi Road Area', 'Viralimalai', 'Illuppur', 'Alangudi', 'Gandarvakkottai', 'Thirumayam', 'Avudaiyarkoil', 'Ponnamaravathi', 'Kottaipattinam', 'Manamelkudi'],
+      'Ramanathapuram': ['Ramanathapuram Town', 'Rameswaram', 'Paramakudi', 'Kilakarai', 'Mudukulathur', 'Kamuthi', 'Tiruvadanai', 'Abiramam', 'Mandapam', 'Sayalgudi', 'Tangachimadam', 'Uppoor'],
+      'Ranipet': ['Ranipet Town', 'Walajapet', 'Arcot', 'Arakkonam', 'Sholinghur', 'SIPCOT Ranipet', 'Melvisharam', 'Nemili', 'Panapakkam', 'Thakkolam'],
+      'Salem': ['Hasthampatti', 'Fairlands', 'Suramangalam', 'Shevapet', 'Ammapet', 'Attur', 'Mettur Dam', 'Omalur', 'Edappadi', 'Kondalampatti', 'Gorimedu', 'Kannankurichi', 'Gugai', 'Alagapuram', 'Ayothiapattinam', 'Jalokandapuram', 'Karuppur', 'Mecheri', 'Nethimedu', 'Sankari', 'Seelanaickenpatti', 'Tharamangalam', 'Valapady', 'Yercaud Foot Hills'],
+      'Sivaganga': ['Sivaganga Town', 'Karaikudi', 'Devakottai', 'Manamadurai', 'Thirupuvanam', 'Kalayarkoil', 'Ilayangudi', 'Singampunari', 'Tirupathur Sivaganga', 'Nerkuppai'],
+      'Tenkasi': ['Tenkasi Town', 'Courtallam / Kutralam', 'Sankarankovil', 'Kadayanallur', 'Puliyangudi', 'Alangulam', 'Shenkottai', 'Surandai', 'Vasudevanallur', 'Tiruvenkatam'],
+      'Thanjavur': ['Old Bus Stand Area', 'Medical College Road', 'New Bus Stand Thanjavur', 'Kumbakonam Town', 'Pattukkottai', 'Schwartz Church Area', 'Nanjikottai Road', 'Tamil University Area', 'Adirampattinam', 'Budalur', 'Orathanadu', 'Papanasam', 'Peravurani', 'Swamimalai', 'Thiruvaiyaru', 'Thiruvidaimarudur', 'Vallam'],
+      'Theni': ['Theni Town', 'Periyakulam', 'Bodinayakanur / Bodi', 'Cumbum', 'Uthamapalayam', 'Andipatti', 'Chinnamanur', 'Gudalur Theni', 'Devadanapatti', 'Veerapandi Theni'],
+      'Thoothukudi / Tuticorin': ['Pearl City Area', 'Subbiahpuram', 'Kovilpatti', 'Tiruchendur', 'Muthiahpuram', 'Spic Nagar', 'Sathankulam', 'Eral', 'Thoothukudi Town', 'Kayalpattinam', 'Kazugumalai', 'Ottapidaram', 'Thoothukudi Port Area', 'Udangudi', 'Vilathikulam'],
+      'Tiruchirappalli / Trichy': ['Thillai Nagar', 'Srirangam', 'Kantonment Trichy', 'Puthur Trichy', 'KK Nagar Trichy', 'Lalgudi', 'Manapparai', 'Woraiyur', 'Tiruverumbur', 'Ponmalai', 'Golden Rock', 'Airport Area Trichy', 'Kattur Trichy', 'TTV Nagar', 'Ariyamangalam', 'Crawford', 'Karumandapam', 'Musiri', 'No.1 Tollgate', 'Palakarai', 'Ramalinga Nagar', 'Samayapuram', 'Thiruverumbur BHEL Area', 'Thuraiyur', 'Uraiyur Road'],
+      'Tirunelveli': ['Palayamkottai', 'Tirunelveli Town', 'Melapalayam', 'Vannarpettai', 'Tirunelveli Junction', 'Tenkasi Road', 'Perumalpuram', 'Tachchanallur', 'High Ground', 'Ambasamudram', 'Cheranmahadevi', 'Kalakkad', 'Manur', 'Nanguneri', 'Radhapuram', 'Samathanapuram', 'Thazhaiyuthu', 'Vickramasingapuram'],
+      'Tirupathur': ['Tirupathur Town', 'Vaniyambadi', 'Ambur', 'Natrampalli', 'Yelagiri Hills Area', 'Jolarpettai', 'Alangayam', 'Kandili', 'Tirupathur Fort Area'],
+      'Tiruppur': ['Avinashi Road Tiruppur', 'Dharapuram', 'Palladam', 'Udumalpet', 'Nallur Tiruppur', 'Velampalayam', 'Anupparpalayam', 'Kangeyam Road', 'Rayapuram Tiruppur', 'Avinashi Town', 'Kangeyam Town', 'Kovilpalayam', 'Kumaran Nagar', 'Mangalam', 'Muthanampalayam', 'Old Bus Stand Tiruppur', 'Pandian Nagar', 'Vellakoil'],
+      'Tiruvallur': ['Avadi', 'Poonamallee', 'Tiruvallur Town', 'Thiruninravur', 'Gummidipoondi', 'Ponneri', 'Tiruttani', 'Uthukottai', 'Minjur', 'Manavalanagar', 'Kakkalur', 'Pattabiram', 'Veppampattu', 'Thiruvallur High Road', 'Red Hills', 'Cholavaram', 'RK Pet', 'Pallipattu', 'Kadambathur', 'Ellapuram', 'Poondi', 'Sholavaram', 'Tiruvalangadu', 'Periyapalayam', 'Seevapet'],
+      'Tiruvannamalai': ['Tiruvannamalai Town', 'Arani', 'Cheyyar', 'Polur', 'Chengam', 'Vandavasi', 'Devikapuram', 'Kilpennathur', 'Thanipadi', 'Thiruvethipuram'],
+      'Tiruvarur': ['Tiruvarur Town', 'Mannargudi', 'Thiruthuraipoondi', 'Nannilam', 'Kudavasal', 'Valangaiman', 'Needamangalam', 'Muthupet', 'Koradacherry', 'Peralam'],
+      'Vellore': ['Sathuvachari', 'Katpadi', 'Gandhi Nagar Vellore', 'Bagayam', 'Thorapadi', 'Otteri Vellore', 'Shenbakkam', 'Konavattam', 'Vellore Fort Area', 'Anaicut', 'Gudiyattam', 'Kallapadai', 'KATPADI Junction Area', 'Latheri', 'Pernambut', 'Sainathapuram', 'Salavanpet'],
+      'Viluppuram': ['Viluppuram Town', 'Tindivanam', 'Gingee', 'Vikravandi', 'Vanur', 'Kandamangalam', 'Marakkanam', 'Valavanur', 'Ananthapuram', 'Kanai'],
+      'Virudhunagar': ['Virudhunagar Town', 'Sivakasi', 'Rajapalayam', 'Satur / Sattur', 'Aruppukottai', 'Srivilliputhur', 'Kariyapatti', 'Mamsapuram', 'Thiruthangal', 'Watrap'],
+    },
+    'Telangana': {
+      'Hyderabad': ['Banjara Hills', 'Jubilee Hills', 'Gachibowli', 'Madhapur', 'Hitec City', 'Secunderabad', 'Kukatpally', 'Begumpet', 'Ameerpet', 'LB Nagar', 'Miyapur', 'Kondapur', 'Uppal', 'Dilsukhnagar', 'Mehdipatnam', 'Tarnaka', 'Himayatnagar', 'Abids', 'Alwal', 'Attapur', 'Balanagar', 'Boduppal', 'Champapet', 'Charminar Area', 'Habsiguda', 'Jeedimetla', 'Kachiguda', 'Khairatabad', 'Kothapet Hyderabad', 'Lingampally', 'Malkajgiri', 'Manikonda', 'Malakpet', 'Nampally', 'Nizampet', 'Old City Hyderabad', 'Punjagutta', 'Ramanthapur', 'Sainikpuri', 'Sanathnagar', 'SR Nagar', 'Toli Chowki', 'Vanasthalipuram'],
+      'Warangal': ['Kazipet', 'Hanamkonda', 'Subedari', 'Warangal Fort', 'Narsampet', 'Hunter Road', 'Waddepally', 'Balasamudram', 'Deshaipet', 'Jangaon Road', 'Kashibugga', 'MGM Hospital Area', 'Pochamma Maidan'],
+      'Nizamabad': ['Khaleelwadi', 'Armoor', 'Bodhan', 'Subhash Nagar', 'Vinayak Nagar', 'Bada Bazaar Nizamabad', 'Dichpally', 'Kanteshwar'],
+      'Karimnagar': ['Mukarampura', 'Kothirampur', 'Collectorate Area', 'Godavarikhani', 'Ramagundam', 'Bhagyanagar Karimnagar', 'Choppadandi', 'Jagtial Road'],
+      'Khammam': ['Wyra Road', 'Mustafa Nagar', 'Khanapuram', 'Naya Bazaar', 'Khammam Fort Area', 'Mamillagudem', 'Rotary Nagar'],
+      'Mahbubnagar': ['New Town', 'Clock Tower Area', 'Metuguda', 'Jedcherla', 'Boyapalle', 'Palanagar'],
+    },
+    'Tripura': {
+      'Agartala': ['Banamalipur', 'Dhaleswar', 'Indranagar', 'Ramnagar', 'Gb Bazaar', 'Abhoynagar', 'Arundhutinagar', 'Battala', 'College Tilla', 'Kunjaban'],
+      'Dharmanagar': ['Barabari', 'Rajbari', 'Subhash Nagar', 'Dewanpasa'],
+    },
+    'Uttar Pradesh': {
+      'Lucknow': ['Hazratganj', 'Gomti Nagar', 'Alambagh', 'Indira Nagar', 'Mahanagar', 'Aashiana', 'Rajajipuram', 'Jankipuram', 'Vikas Nagar', 'Charbagh', 'Aminabad', 'Chinhat', 'Amousi', 'Balaganj', 'Cantt Lucknow', 'Chowk Lucknow', 'Faizabad Road', 'Gomti Nagar Extension', 'Hussainabad', 'IIM Road Area', 'Kanpur Road Lucknow', 'Lalbagh Lucknow', 'Naka Hindola', 'Nishatganj', 'Sushant Golf City', 'Telibagh', 'Vrindavan Yojana'],
+      'Noida': ['Sector 18', 'Sector 62', 'Sector 15', 'Sector 137', 'Greater Noida West', 'Sector 50', 'Sector 76', 'Sector 128', 'Alpha 1 Greater Noida', 'Beta 2 Greater Noida', 'Delta 1 Greater Noida', 'Knowledge Park', 'Sector 1', 'Sector 12', 'Sector 22', 'Sector 34', 'Sector 44', 'Sector 55', 'Sector 71', 'Sector 93', 'Sector 104', 'Sector 120', 'Sector 150'],
+      'Kanpur': ['Civil Lines', 'Swaroop Nagar', 'Kidwai Nagar', 'Kakadeo', 'Mall Road', 'Govind Nagar', 'Sharda Nagar', 'Pankha', 'Chakeri', 'Armapur', 'Bararra', 'Chunniganj', 'Gumti No 5', 'Harjinder Nagar', 'Kalyanpur Kanpur', 'Lajpat Nagar Kanpur', 'Nawabganj Kanpur', 'Prawatipur', 'Shyam Nagar Kanpur', 'Yashoda Nagar'],
+      'Varanasi': ['Lanka', 'Sigra', 'Godowlia', 'Cantonment', 'Bhelupur', 'Shivpur', 'Sarnath', 'Assi Ghat Area', 'Mahmoorganj', 'Babuatpur', 'Chetganj', 'Durgakund', 'Lahurabir', 'Maidagin', 'Orderly Bazaar', 'Pandeypur', 'Ramnagar Varanasi'],
+      'Agra': ['Sanjay Place', 'Tajganj', 'Civil Lines', 'Dayalbagh', 'Khandari', 'Shahganj', 'Kamla Nagar', 'Bodla', 'Fatehabad Road', 'Lohamandi', 'Pratap Pura', 'Raja Ki Mandi', 'Sadai Bazaar Agra'],
+      'Prayagraj / Allahabad': ['Civil Lines', 'Katra', 'Georgetown', 'Naini', 'Jhalwa', 'Tagore Town', 'Ashok Nagar', 'Allahabad Fort Area', 'Chowk Allahabad', 'Dhoomanganj', 'Karekeli', 'Lukerganj', 'Mumfordganj', 'Rambagh Allahabad', 'Teliyarganj'],
+      'Ghaziabad': ['Indirapuram', 'Vaishali', 'Vasundhara', 'Raj Nagar Extension', 'Crossings Republik', 'Kaushambi', 'Abhay Khand', 'Govindpuram', 'Kavi Nagar', 'Mohan Nagar Ghaziabad', 'Patel Nagar Ghaziabad', 'Raj Nagar Ghaziabad', 'Sahibabad', 'Surya Nagar Ghaziabad', 'Vijay Nagar Ghaziabad'],
+      'Meerut': ['Civil Lines', 'Shastri Nagar', 'Kanker Kheria', 'Modinagar', 'Pallavpuram', 'Begum Bridge Road', 'Delhi Road Meerut', 'Garh Road', 'Meerut Cantt', 'Transport Nagar Meerut'],
+      'Bareilly': ['Civil Lines', 'Rajendra Nagar', 'DD Puram', 'Subhash Nagar', 'Chopati Area', 'Izzatnagar', 'Model Town Bareilly', 'Pilibhit Bypass Road'],
+      'Gorakhpur': ['Golghar', 'Civil Lines', 'Medical College Area', 'Shahpur', 'Taramandal', 'Bankatwa', 'Bashratpur', 'Geeta Vatika Area', 'Industrial Area Gorakhpur', 'Khorabar'],
+      'Mathura': ['Vrindavan', 'Krishna Nagar', 'Dampier Nagar', 'Highway City', 'Govardhan Road', 'Holy Gate Area', 'Raya Road'],
+      'Aligarh': ['Civil Lines', 'Ramghat Road', 'Dodalpur', 'Medical Colony', 'AMU Campus Area', 'GT Road Aligarh', 'Kole Nagar'],
+    },
+    'Uttarakhand': {
+      'Dehradun': ['Rajpur Road', 'Clement Town', 'Vasant Vihar', 'Race Course', 'Garhi Cantt', 'Dalanwala', 'Ballupur', 'ISBT Area', 'Patel Nagar Dehradun', 'Chakrata Road', 'Clock Tower Area', 'Doiwala', 'Indira Nagar Dehradun', 'Karanpur Dehradun', 'Prem Nagar Dehradun', 'Sahasthradhara Road', 'Subhash Nagar Dehradun'],
+      'Haridwar': ['Kankhal', 'Ranipur', 'Har Ki Pauri', 'Jwalapur', 'Sidhul', 'Shivalik Nagar', 'Bhopatwala', 'Jwala Pur Road', 'Laksar Road'],
+      'Haldwani / Nainital': ['Mallital Nainital', 'Tallital Nainital', 'Kathgodam', 'Kaladhungi Road', 'Bareilly Road Haldwani', 'Bhowali', 'Lalkuan', 'Mukhani Haldwani'],
+      'Roorkee': ['Civil Lines', 'IIT Campus Area', 'Ramnagar', 'Ganeshpur', 'Roorkee Cantt'],
+    },
+    'West Bengal': {
+      'Kolkata': ['Park Street', 'Salt Lake Sector 1', 'Salt Lake Sector 5', 'Ballygunge', 'New Town', 'Howrah', 'Alipore', 'Dum Dum', 'Tollygunge', 'Jadavpur', 'Behala', 'Garia', 'Shambazaar', 'Kankurgachi', 'Barasat', 'Baghajatin', 'Baranagar', 'Barrackpore', 'Bhowanipore', 'Cossipore', 'Entally', 'Hatibagan', 'Jorasanko', 'Kasba Kolkata', 'Kiddpore', 'Lake Town', 'Madhyamgram', 'Maniktala', 'New Alipore', 'Rajharhat', 'Sealdah Area', 'Shyambazar', 'Sonarpur', 'Ultadanga'],
+      'Siliguri': ['Hakimpara', 'Bidhan Nagar', 'Pradhan Nagar', 'Matigara', 'Sevoke Road', 'Subhash Pally', 'Champasari', 'Deshbandhu Para', 'Khalpara', 'Salugara'],
+      'Asansol': ['Court More', 'Hutton Road', 'Burnpur', 'Kalyanpur', 'GT Road Area', 'Kulti', 'Neamatpur', 'Raniganj'],
+      'Durgapur': ['City Centre', 'Benachity', 'Bidhannagar', 'Steel Township', 'A-Zone', 'B-Zone Durgapur', 'Fuljhore', 'Muchipara'],
+      'Bardhaman': ['Rajbati', 'Court Compound', 'Pirpukur', 'Shaktigarh', 'Baburbag', 'Golapbag'],
+      'Kharagpur': ['IIT Campus Area', 'Nimpura', 'Hijli', 'Inda', 'Malancha Road', 'Prembazar'],
+    },
+  };
+
+  /// Returns sorted list of all 28 States & 8 UTs.
+  static List<String> getStates() {
+    return data.keys.toList()..sort();
+  }
+
+  /// Returns list of Cities/Districts for a given State.
+  static List<String> getCities(String state) {
+    if (!data.containsKey(state)) return [];
+    return data[state]!.keys.toList()..sort();
+  }
+
+  /// Returns list of Wards/Areas/Localities for a given State and City.
+  static List<String> getWards(String state, String city) {
+    if (!data.containsKey(state)) return [];
+    if (!data[state]!.containsKey(city)) return [];
+    return data[state]![city]!;
+  }
+}

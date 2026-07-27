@@ -6,5 +6,7 @@ void main() {
   testWidgets('App launches successfully', (WidgetTester tester) async {
     await tester.pumpWidget(const CivicReporterApp());
     expect(find.byType(MaterialApp), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
   });
 }
