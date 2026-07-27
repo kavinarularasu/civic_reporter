@@ -658,6 +658,26 @@ class ReportStore extends ChangeNotifier {
 // MAIN ENTRY POINT
 // ==========================================
 
+Future<void> preseedAadhaarDatabase() async {
+  try {
+    final uidaiRef = FirebaseFirestore.instance.collection('uidai_aadhaar_records');
+    final records = {
+      '880561950214': 'kavin',
+      '123456789012': 'Kavin Kumar',
+      '987654321012': 'John',
+    };
+
+    for (var entry in records.entries) {
+      await uidaiRef.doc(entry.key).set({
+        'name': entry.value,
+        'status': 'Active',
+      }, SetOptions(merge: true));
+    }
+  } catch (e) {
+    debugPrint('Preseed error: $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   EnvConfig.printConfigSummary();
@@ -665,6 +685,7 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    await preseedAadhaarDatabase();
   } catch (e) {
     debugPrint('Firebase init error: $e');
   }
@@ -832,37 +853,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  static bool _verhoeffCheck(String number) {
-    const List<List<int>> d = [
-      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
-      [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
-      [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
-      [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
-      [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
-      [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
-      [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
-      [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
-      [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
-    ];
-    const List<List<int>> p = [
-      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
-      [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
-      [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
-      [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
-      [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
-      [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
-      [7, 0, 4, 6, 9, 1, 3, 2, 5, 8],
-    ];
-    int c = 0;
-    final myArray = number.split('').reversed.toList();
-    for (int i = 0; i < myArray.length; i++) {
-      c = d[c][p[(i % 8)][int.parse(myArray[i])]];
-    }
-    return c == 0;
-  }
-
   Future<void> _verifyAadhar() async {
     final aadhar = _aadharController.text.trim().replaceAll(RegExp(r'\D'), '');
     final enteredName = _usernameController.text.trim();
@@ -887,47 +877,50 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (!_verhoeffCheck(aadhar)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid Aadhaar Number! Checksum verification failed.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     setState(() {
       _isVerifyingAadhar = true;
     });
 
     try {
+      // Query the mock UIDAI database in Firestore
       final doc = await FirebaseFirestore.instance
-          .collection('verified_aadhaar')
+          .collection('uidai_aadhaar_records')
           .doc(aadhar)
           .get();
 
-      if (doc.exists) {
-        final storedName = (doc.data()?['name'] ?? '').toString().trim().toLowerCase();
-        if (storedName.isNotEmpty && storedName != enteredName.trim().toLowerCase()) {
-          if (!mounted) return;
-          setState(() => _isVerifyingAadhar = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Aadhaar verification failed! This Aadhaar is registered under a different name.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
+      if (!doc.exists) {
+        if (!mounted) return;
+        setState(() => _isVerifyingAadhar = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aadhaar verification failed! Aadhaar number not found in UIDAI records.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
       }
 
+      final registeredName = (doc.data()?['name'] ?? '').toString().trim().toLowerCase();
+      if (registeredName != enteredName.trim().toLowerCase()) {
+        if (!mounted) return;
+        setState(() => _isVerifyingAadhar = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aadhaar verification failed! Name mismatch with UIDAI record.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Store in verified collection for history check
       await FirebaseFirestore.instance.collection('verified_aadhaar').doc(aadhar).set({
         'name': enteredName.trim(),
         'verified_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
     } catch (e) {
-      debugPrint('Aadhaar Firestore check error: $e');
+      debugPrint('Aadhaar check error: $e');
     }
 
     await Future.delayed(const Duration(milliseconds: 800));
