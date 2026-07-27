@@ -1029,8 +1029,49 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result.isSuccess) {
-        final displayName = result.displayName ?? 'Citizen User';
+        String displayName = result.displayName ?? 'Citizen User';
         final email = result.email ?? 'citizen@gmail.com';
+
+        if (displayName == 'Google Verified Citizen') {
+          final nameController = TextEditingController();
+          final enteredName = await showDialog<String>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Google Verification Success'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Please enter your Full Name to complete registration:'),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: 'Full Name',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    final txt = nameController.text.trim();
+                    if (txt.isNotEmpty) {
+                      Navigator.pop(context, txt);
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
+            ),
+          );
+          if (enteredName != null && enteredName.isNotEmpty) {
+            displayName = enteredName;
+          }
+        }
 
         final googleUser = UserAccount(
           name: displayName,
