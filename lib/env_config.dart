@@ -12,7 +12,7 @@ class EnvConfig {
   // Google OAuth Credentials (set via --dart-define or .env)
   static const String googleClientId = String.fromEnvironment(
     'GOOGLE_CLIENT_ID',
-    defaultValue: '',
+    defaultValue: '764357521579-liie8pcebfpf30o0m6irnkfg8ddhpgi6.apps.googleusercontent.com',
   );
   static const String googleClientSecret = String.fromEnvironment(
     'GOOGLE_CLIENT_SECRET',

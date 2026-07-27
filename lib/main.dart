@@ -837,113 +837,51 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _aadharController = TextEditingController();
 
   String _selectedRole = 'reporter'; // 'reporter' or 'officer'
   bool _isLoading = false;
-  bool _isVerifyingAadhar = false;
-  bool _isAadharVerified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkRedirectAuth();
+  }
+
+  Future<void> _checkRedirectAuth() async {
+    final result = await GoogleAuthService.checkRedirectResult(role: 'reporter');
+    if (result != null && result.isSuccess && mounted) {
+      final displayName = result.displayName ?? 'Citizen User';
+      final email = result.email ?? 'citizen@gmail.com';
+      final googleUser = UserAccount(
+        name: displayName,
+        username: email,
+        password: '',
+        email: email,
+        role: 'reporter',
+        mobileNumber: 'Google Verified',
+        isMobileVerified: true,
+        verificationMethod: 'Google',
+        selectedState: 'Tamil Nadu',
+        selectedCity: 'Tiruvallur',
+        selectedWard: 'Avadi',
+      );
+      UserStore.instance.setCurrentUser(googleUser);
+      _navigateToLocationSelection();
+    }
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     _mobileController.dispose();
-    _aadharController.dispose();
     super.dispose();
-  }
-
-  Future<void> _verifyAadhar() async {
-    final aadhar = _aadharController.text.trim().replaceAll(RegExp(r'\D'), '');
-    final enteredName = _usernameController.text.trim();
-
-    if (aadhar.length != 12) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid 12-digit Aadhaar Number to verify'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (enteredName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your Full Name before verifying Aadhaar'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isVerifyingAadhar = true;
-    });
-
-    try {
-      // Query the mock UIDAI database in Firestore
-      final doc = await FirebaseFirestore.instance
-          .collection('uidai_aadhaar_records')
-          .doc(aadhar)
-          .get();
-
-      if (!doc.exists) {
-        if (!mounted) return;
-        setState(() => _isVerifyingAadhar = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aadhaar verification failed! Aadhaar number not found in UIDAI records.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      final registeredName = (doc.data()?['name'] ?? '').toString().trim().toLowerCase();
-      if (registeredName != enteredName.trim().toLowerCase()) {
-        if (!mounted) return;
-        setState(() => _isVerifyingAadhar = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aadhaar verification failed! Name mismatch with UIDAI record.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      // Store in verified collection for history check
-      await FirebaseFirestore.instance.collection('verified_aadhaar').doc(aadhar).set({
-        'name': enteredName.trim(),
-        'verified_at': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-    } catch (e) {
-      debugPrint('Aadhaar check error: $e');
-    }
-
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    if (!mounted) return;
-    setState(() {
-      _isVerifyingAadhar = false;
-      _isAadharVerified = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Aadhaar Number Verified Successfully ✓'),
-        backgroundColor: Colors.green,
-      ),
-    );
   }
 
   Future<void> _handleAuth() async {
     final username = _usernameController.text.trim();
     final mobile = _mobileController.text.trim().replaceAll(RegExp(r'\D'), '');
     final password = _passwordController.text.trim();
-    final aadhar = _aadharController.text.trim();
 
     if (_selectedRole == 'officer') {
       if (username.isEmpty || password.isEmpty) {
@@ -965,15 +903,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         return;
       }
-      if (!_isAadharVerified) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please verify your Aadhaar number before logging in.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
     }
 
     setState(() => _isLoading = true);
@@ -983,7 +912,6 @@ class _LoginScreenState extends State<LoginScreen> {
       password.isNotEmpty ? password : 'INDIA',
       selectedRole: _selectedRole,
       mobileNumber: mobile,
-      aadharNumber: aadhar,
     );
 
     if (!mounted) return;
@@ -1004,6 +932,68 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
 
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await GoogleAuthService.signInWithGoogle(role: 'reporter')
+          .timeout(const Duration(seconds: 15), onTimeout: () {
+        return GoogleAuthResult.failure('Google Sign-In popup timed out or was closed. Please try again.');
+      });
+
+      if (!mounted) return;
+
+      if (result.isSuccess) {
+        final displayName = result.displayName ?? 'Citizen User';
+        final email = result.email ?? 'citizen@gmail.com';
+
+        final googleUser = UserAccount(
+          name: displayName,
+          username: email,
+          password: '',
+          email: email,
+          role: 'reporter',
+          mobileNumber: 'Google Verified',
+          isMobileVerified: true,
+          verificationMethod: 'Google',
+          selectedState: 'Tamil Nadu',
+          selectedCity: 'Tiruvallur',
+          selectedWard: 'Avadi',
+        );
+
+        UserStore.instance.setCurrentUser(googleUser);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Signed in with Google as $displayName'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        _navigateToLocationSelection();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Google Sign-In failed.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Sign-In error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   void _navigateToLocationSelection() {
     Navigator.pushReplacement(
@@ -1166,7 +1156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           isOfficer
                               ? 'Enter your Officer ID and Password'
-                              : 'Enter your Full Name, Mobile Number & Aadhaar Number',
+                              : 'Enter your Full Name & Mobile Number',
                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         ),
                         const SizedBox(height: 20),
@@ -1234,57 +1224,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Text('Aadhaar Number (12-Digit UIDAI)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A2540))),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _aadharController,
-                                  keyboardType: TextInputType.number,
-                                  maxLength: 12,
-                                  enabled: !_isAadharVerified,
-                                  decoration: InputDecoration(
-                                    counterText: '',
-                                    prefixIcon: const Icon(Icons.credit_card, color: Color(0xFF0A2540)),
-                                    hintText: 'Aadhaar Number',
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFF0A2540), width: 2),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                height: 56,
-                                child: ElevatedButton(
-                                  onPressed: (_isAadharVerified || _isVerifyingAadhar) ? null : _verifyAadhar,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _isAadharVerified ? Colors.green : const Color(0xFF0A2540),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  child: _isVerifyingAadhar
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                        )
-                                      : _isAadharVerified
-                                          ? const Row(
-                                              children: [
-                                                Icon(Icons.check, color: Colors.white, size: 16),
-                                                SizedBox(width: 4),
-                                                Text('Verified', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                              ],
-                                            )
-                                          : const Text('Verify', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
 
                         const SizedBox(height: 24),
@@ -1306,6 +1245,72 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
+
+                        if (!isOfficer) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(
+                                  'OR',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: OutlinedButton(
+                              onPressed: _isLoading ? null : _handleGoogleSignIn,
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFF4285F4),
+                                    ),
+                                    child: const Center(
+                                      child: Text(
+                                        'G',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Sign in with Google',
+                                    style: TextStyle(
+                                      color: Color(0xFF202124),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
