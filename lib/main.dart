@@ -1000,6 +1000,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
         UserStore.instance.setCurrentUser(googleUser);
 
+        // Save new Google Sign-In user account in database
+        try {
+          final docId = result.uid ?? email;
+          await FirebaseFirestore.instance.collection('users').doc(docId).set({
+            'uid': docId,
+            'name': displayName,
+            'username': email,
+            'email': email,
+            'role': 'reporter',
+            'mobile_number': 'Google Verified',
+            'provider': 'google.com',
+            'is_verified': true,
+            'selected_state': 'Tamil Nadu',
+            'selected_city': 'Tiruvallur',
+            'selected_ward': 'Avadi',
+            'lastLogin': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (e) {
+          debugPrint('Firestore Google Account Creation Error: $e');
+        }
+
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Signed in with Google as $displayName'),
