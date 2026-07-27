@@ -320,6 +320,7 @@ class UserStore extends ChangeNotifier {
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Firestore User Login Sync Error: $e');
+      rethrow;
     }
 
     notifyListeners();
@@ -617,6 +618,7 @@ class ReportStore extends ChangeNotifier {
       });
     } catch (e) {
       debugPrint('Firestore Sync Error: $e');
+      rethrow;
     }
   }
 
@@ -943,25 +945,55 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    bool success = await UserStore.instance.login(
-      username,
-      password.isNotEmpty ? password : 'INDIA',
-      selectedRole: _selectedRole,
-      mobileNumber: mobile,
-    );
+    try {
+      bool success = await UserStore.instance.login(
+        username,
+        password.isNotEmpty ? password : 'INDIA',
+        selectedRole: _selectedRole,
+        mobileNumber: mobile,
+      );
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    if (success) {
-      _navigateToLocationSelection();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_selectedRole == 'officer'
-              ? 'Login failed! Officer ID must be 2 capital letters followed by 123, and password must be INDIA.'
-              : 'Authentication failed. Check your ID and password.'),
-          backgroundColor: Colors.red,
+      if (success) {
+        _navigateToLocationSelection();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_selectedRole == 'officer'
+                ? 'Login failed! Officer ID must be 2 capital letters followed by 123, and password must be INDIA.'
+                : 'Authentication failed. Check your ID and password.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.cloud_off, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Firestore Database Error'),
+            ],
+          ),
+          content: Text(
+            'Could not write user profile to Cloud Firestore:\n\n$e\n\n'
+            'Please ensure your Firebase Firestore Rules allow authenticated reads and writes.\n\n'
+            'Go to Firebase Console -> Firestore Database -> Rules, and change them to:\n\n'
+            'allow read, write: if request.auth != null;'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
     }
@@ -2929,7 +2961,38 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       aiModerationStatus: 'Passed',
     );
 
-    await ReportStore.instance.addReport(newReport);
+    try {
+      await ReportStore.instance.addReport(newReport);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.cloud_off, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Database Sync Error'),
+            ],
+          ),
+          content: Text(
+            'Could not save report to Firebase Firestore:\n\n$e\n\n'
+            'Please ensure your Firebase Firestore Rules allow authenticated reads and writes.\n\n'
+            'Go to Firebase Console -> Firestore Database -> Rules, and set them to:\n\n'
+            'allow read, write: if request.auth != null;'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
