@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -527,6 +528,14 @@ class ReportStore extends ChangeNotifier {
               iconColor = Colors.red;
             }
 
+            final base64Str = data['image_base64'];
+            Uint8List? imgBytes;
+            if (base64Str != null && base64Str.toString().isNotEmpty) {
+              try {
+                imgBytes = base64Decode(base64Str.toString());
+              } catch (_) {}
+            }
+
             final report = ReportModel(
               id: id,
               type: type,
@@ -542,6 +551,7 @@ class ReportStore extends ChangeNotifier {
               time: data['time'] ?? 'Just now',
               description: data['description'] ?? '',
               severity: data['severity'] ?? 'Medium',
+              imageBytes: imgBytes,
               submittedBy: data['submittedBy'] ?? 'Citizen',
               submittedByPhone: data['submittedByPhone'] ?? '+91 9876543210',
               submittedByEmail: data['submittedByEmail'] ?? 'citizen@civicreporter.org',
@@ -592,6 +602,11 @@ class ReportStore extends ChangeNotifier {
       }
     }
 
+    String? imageBase64;
+    if (report.imageBytes != null && report.imageBytes!.isNotEmpty) {
+      imageBase64 = base64Encode(report.imageBytes!);
+    }
+
     try {
       final user = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection('reports').doc(report.id).set({
@@ -606,6 +621,7 @@ class ReportStore extends ChangeNotifier {
         'time': report.time,
         'description': report.description,
         'severity': report.severity,
+        'image_base64': imageBase64,
         'submittedBy': report.submittedBy,
         'submittedByPhone': report.submittedByPhone,
         'submittedByEmail': report.submittedByEmail,
