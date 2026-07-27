@@ -120,7 +120,10 @@ class UserStore extends ChangeNotifier {
       _currentUser!.selectedWard = ward;
 
       try {
-        FirebaseFirestore.instance.collection('users').doc(_currentUser!.username).set({
+        final docId = _currentUser!.role == 'officer'
+            ? _currentUser!.username
+            : '${_currentUser!.username}_${_currentUser!.mobileNumber}';
+        FirebaseFirestore.instance.collection('users').doc(docId).set({
           'selected_state': state,
           'selected_city': city,
           'selected_ward': ward,
@@ -891,14 +894,68 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _aadharController = TextEditingController();
 
   String _selectedRole = 'reporter'; // 'reporter' or 'officer'
   bool _isLoading = false;
+  bool _isSignUpMode = false;
+
+  String _signUpState = 'Tamil Nadu';
+  String _signUpCity = 'Tiruvallur';
+  String _signUpWard = 'Avadi';
+
+  List<String> _availableStates = [];
+  List<String> _availableCities = [];
+  List<String> _availableWards = [];
+
+  void _loadSignUpDropdowns() {
+    _availableStates = IndiaLocations.getStates();
+    if (!_availableStates.contains(_signUpState) && _availableStates.isNotEmpty) {
+      _signUpState = _availableStates.first;
+    }
+    _availableCities = IndiaLocations.getCities(_signUpState);
+    if (!_availableCities.contains(_signUpCity) && _availableCities.isNotEmpty) {
+      _signUpCity = _availableCities.first;
+    }
+    _availableWards = IndiaLocations.getWards(_signUpState, _signUpCity);
+    if (!_availableWards.contains(_signUpWard) && _availableWards.isNotEmpty) {
+      _signUpWard = _availableWards.first;
+    }
+  }
+
+  void _onSignUpStateChanged(String? newState) {
+    if (newState == null || newState == _signUpState) return;
+    setState(() {
+      _signUpState = newState;
+      _availableCities = IndiaLocations.getCities(_signUpState);
+      _signUpCity = _availableCities.isNotEmpty ? _availableCities.first : '';
+      _availableWards = IndiaLocations.getWards(_signUpState, _signUpCity);
+      _signUpWard = _availableWards.isNotEmpty ? _availableWards.first : '';
+    });
+  }
+
+  void _onSignUpCityChanged(String? newCity) {
+    if (newCity == null || newCity == _signUpCity) return;
+    setState(() {
+      _signUpCity = newCity;
+      _availableWards = IndiaLocations.getWards(_signUpState, _signUpCity);
+      _signUpWard = _availableWards.isNotEmpty ? _availableWards.first : '';
+    });
+  }
+
+  void _onSignUpWardChanged(String? newWard) {
+    if (newWard == null || newWard == _signUpWard) return;
+    setState(() {
+      _signUpWard = newWard;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _checkRedirectAuth();
+    _loadSignUpDropdowns();
   }
 
   Future<void> _checkRedirectAuth() async {
@@ -929,6 +986,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     _mobileController.dispose();
+    _emailController.dispose();
+    _aadharController.dispose();
     super.dispose();
   }
 
@@ -936,12 +995,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final username = _usernameController.text.trim();
     final mobile = _mobileController.text.trim().replaceAll(RegExp(r'\D'), '');
     final password = _passwordController.text.trim();
+    final email = _emailController.text.trim();
+    final aadhar = _aadharController.text.trim();
 
     if (_selectedRole == 'officer') {
       if (username.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please enter your Officer State Shortform ID (e.g. TN123) and Password (INDIA)'),
+            content: Text('Login failed: Wrong Authentication'),
             backgroundColor: Colors.red,
           ),
         );
@@ -957,32 +1018,150 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         return;
       }
+
+      if (_isSignUpMode) {
+        if (email.isEmpty || !email.contains('@')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter a valid Email Address'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
     }
 
     setState(() => _isLoading = true);
 
     try {
-      bool success = await UserStore.instance.login(
-        username,
-        password.isNotEmpty ? password : 'INDIA',
-        selectedRole: _selectedRole,
-        mobileNumber: mobile,
-      );
-
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      if (success) {
-        _navigateToLocationSelection();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_selectedRole == 'officer'
-                ? 'Login failed! Officer ID must be 2 capital letters followed by 123, and password must be INDIA.'
-                : 'Authentication failed. Check your ID and password.'),
-            backgroundColor: Colors.red,
-          ),
+      if (_selectedRole == 'officer') {
+        bool success = await UserStore.instance.login(
+          username,
+          password.isNotEmpty ? password : 'INDIA',
+          selectedRole: 'officer',
         );
+
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+
+        if (success) {
+          await FirebaseFirestore.instance.collection('users').doc(username).set({
+            'uid': username,
+            'name': username,
+            'username': username,
+            'email': '${username.toLowerCase()}@civicreporter.gov.in',
+            'role': 'officer',
+            'provider': 'credentials',
+            'lastLogin': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+          _navigateToDashboard();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login failed: Wrong Authentication'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        // Citizen Flow
+        final docId = '${username}_$mobile';
+
+        if (_isSignUpMode) {
+          // Sign Up registration
+          bool success = await UserStore.instance.login(
+            username,
+            'citizen_password_123',
+            selectedRole: 'reporter',
+            mobileNumber: mobile,
+            aadharNumber: aadhar,
+          );
+
+          if (success) {
+            // Write sign up details directly to Firestore
+            await FirebaseFirestore.instance.collection('users').doc(docId).set({
+              'uid': docId,
+              'name': username,
+              'username': username,
+              'email': email,
+              'role': 'reporter',
+              'mobile_number': mobile,
+              'aadhar_number': aadhar,
+              'selected_state': _signUpState,
+              'selected_city': _signUpCity,
+              'selected_ward': _signUpWard,
+              'provider': 'credentials',
+              'is_verified': true,
+              'lastLogin': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+
+            final newUser = UserAccount(
+              name: username,
+              username: username,
+              password: '',
+              email: email,
+              role: 'reporter',
+              mobileNumber: mobile,
+              isMobileVerified: true,
+              verificationMethod: 'Credentials',
+              selectedState: _signUpState,
+              selectedCity: _signUpCity,
+              selectedWard: _signUpWard,
+              aadharNumber: aadhar,
+            );
+            UserStore.instance.setCurrentUser(newUser);
+
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+            _navigateToDashboard();
+          } else {
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Sign up failed. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } else {
+          // Citizen Login - check user profile exists
+          final docSnap = await FirebaseFirestore.instance.collection('users').doc(docId).get();
+          if (!docSnap.exists) {
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account not found. Please click "Sign Up" below to create a new account!'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+
+          // Performs login which loads saved locations automatically
+          bool success = await UserStore.instance.login(
+            username,
+            'citizen_password_123',
+            selectedRole: 'reporter',
+            mobileNumber: mobile,
+          );
+
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+
+          if (success) {
+            _navigateToDashboard();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Authentication failed. Check your ID and password.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -999,10 +1178,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           content: Text(
-            'Could not write user profile to Cloud Firestore:\n\n$e\n\n'
-            'Please ensure your Firebase Firestore Rules allow authenticated reads and writes.\n\n'
-            'Go to Firebase Console -> Firestore Database -> Rules, and change them to:\n\n'
-            'allow read, write: if request.auth != null;'
+            'Could not authenticate user profile:\n\n$e\n\n'
+            'Please ensure your Firebase Firestore is running.'
           ),
           actions: [
             TextButton(
@@ -1148,6 +1325,23 @@ class _LoginScreenState extends State<LoginScreen> {
       context,
       MaterialPageRoute(builder: (context) => const LocationSelectionScreen()),
     );
+  }
+
+  void _navigateToDashboard() {
+    final user = UserStore.instance.currentUser;
+    if (user != null) {
+      if (user.role == 'officer') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LocationSelectionScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeDashboard()),
+        );
+      }
+    }
   }
 
   @override
@@ -1372,6 +1566,76 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
+                          if (_isSignUpMode) ...[
+                            const SizedBox(height: 16),
+                            const Text('Email Address', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A2540))),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.email, color: Color(0xFF0A2540)),
+                                hintText: 'Email Address',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF0A2540), width: 2),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('Aadhar Number (Optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A2540))),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _aadharController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.fingerprint, color: Color(0xFF0A2540)),
+                                hintText: 'Aadhar Number',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF0A2540), width: 2),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('Select State / UT', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A2540))),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              initialValue: _signUpState,
+                              items: _availableStates.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                              onChanged: _onSignUpStateChanged,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.map, color: Color(0xFF0A2540)),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('Select City / District', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A2540))),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              initialValue: _signUpCity,
+                              items: _availableCities.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                              onChanged: _onSignUpCityChanged,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.location_city, color: Color(0xFF0A2540)),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('Select Ward / Area', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A2540))),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              initialValue: _signUpWard,
+                              items: _availableWards.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
+                              onChanged: _onSignUpWardChanged,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.near_me, color: Color(0xFF0A2540)),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ],
                         ],
 
                         const SizedBox(height: 24),
@@ -1388,7 +1652,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: _isLoading
                                 ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                                 : Text(
-                                    isOfficer ? 'Log In as Ward Officer' : 'Log In as Citizen / Reporter',
+                                    isOfficer
+                                        ? 'Log In as Ward Officer'
+                                        : (_isSignUpMode ? 'Register & Sign Up' : 'Log In as Citizen / Reporter'),
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
                           ),
@@ -1455,6 +1721,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                setState(() {
+                                    _isSignUpMode = !_isSignUpMode;
+                                });
+                              },
+                              child: Text(
+                                _isSignUpMode
+                                    ? 'Already have an account? Sign In'
+                                    : 'Don\'t have an account? Sign Up',
+                                style: const TextStyle(
+                                  color: Color(0xFF0A2540),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ),
@@ -1580,7 +1866,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A2540),
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          },
+        ),
         title: const Text(
           'Government Location Onboarding',
           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
@@ -1762,6 +2056,7 @@ class HomeDashboard extends StatefulWidget {
 
 class _HomeDashboardState extends State<HomeDashboard> {
   int _currentIndex = 0;
+  String _statusFilter = 'All';
 
   @override
   void initState() {
@@ -1785,8 +2080,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       _buildHome(),
-      const MyReportsScreen(),
-      const ProfileScreen(),
+      MyReportsScreen(onBack: () => setState(() => _currentIndex = 0)),
+      ProfileScreen(onBack: () => setState(() => _currentIndex = 0)),
     ];
 
     final isWeb = MediaQuery.of(context).size.width > 900;
@@ -1826,6 +2121,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
       return nameMatch && phoneMatch;
     }).toList();
 
+    final filteredReports = myReports.where((r) {
+      if (_statusFilter == 'All') return true;
+      return r.status.toLowerCase() == _statusFilter.toLowerCase();
+    }).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
       appBar: PreferredSize(
@@ -1839,6 +2139,16 @@ class _HomeDashboardState extends State<HomeDashboard> {
               children: [
                 Row(
                   children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LocationSelectionScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -1965,11 +2275,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       const SizedBox(height: 20),
                       Row(
                         children: [
-                          _statCard('${myReports.length}', 'Total\nReported'),
+                          _statCard('${myReports.length}', 'Total\nReported', 'All'),
                           const SizedBox(width: 14),
-                          _statCard('${myReports.where((r) => r.status == 'In Progress').length}', 'In\nProgress'),
+                          _statCard('${myReports.where((r) => r.status == 'In Progress').length}', 'In\nProgress', 'In Progress'),
                           const SizedBox(width: 14),
-                          _statCard('${myReports.where((r) => r.status == 'Resolved').length}', 'Resolved'),
+                          _statCard('${myReports.where((r) => r.status == 'Resolved').length}', 'Resolved', 'Resolved'),
                         ],
                       ),
                     ],
@@ -2026,7 +2336,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      if (myReports.isEmpty)
+                      if (filteredReports.isEmpty)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(24),
@@ -2039,9 +2349,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
                             children: [
                               Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade400),
                               const SizedBox(height: 12),
-                              const Text(
-                                'No reports submitted yet',
-                                style: TextStyle(
+                              Text(
+                                _statusFilter == 'All'
+                                    ? 'No reports submitted yet'
+                                    : 'No $_statusFilter reports found',
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF0A2540),
@@ -2049,7 +2361,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Tap "+ Report Issue" below to submit your first civic issue!',
+                                _statusFilter == 'All'
+                                    ? 'Tap "+ Report Issue" below to submit your first civic issue!'
+                                    : 'There are no active complaints with this status in your records.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                               ),
@@ -2057,7 +2371,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                           ),
                         )
                       else
-                        ...myReports.take(5).map((report) => _issueCard(report)),
+                        ...filteredReports.take(5).map((report) => _issueCard(report)),
                       const SizedBox(height: 80),
                     ],
                   ),
@@ -2085,28 +2399,53 @@ class _HomeDashboardState extends State<HomeDashboard> {
     );
   }
 
-  Widget _statCard(String number, String label) {
+  Widget _statCard(String number, String label, String filterValue) {
+    final isSelected = _statusFilter == filterValue;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Text(number,
-                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            Text(label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 11)),
-          ],
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _statusFilter = filterValue;
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected 
+                ? const Color(0xFFD4AF37).withValues(alpha: 0.8) 
+                : Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected 
+                ? Border.all(color: const Color(0xFFD4AF37), width: 1.5)
+                : null,
+          ),
+          child: Column(
+            children: [
+              Text(number,
+                  style: TextStyle(
+                    color: isSelected ? const Color(0xFF0A2540) : Colors.white, 
+                    fontSize: 22, 
+                    fontWeight: FontWeight.bold
+                  )),
+              Text(label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isSelected ? const Color(0xFF0A2540) : Colors.white70, 
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
+                  )),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _quickReportBtn(IconData icon, String label, Color color) {
+    final isWeb = MediaQuery.of(context).size.width > 900;
+    final size = isWeb ? 52.0 : 48.0;
+    final iconSize = isWeb ? 22.0 : 20.0;
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -2119,17 +2458,24 @@ class _HomeDashboardState extends State<HomeDashboard> {
       child: Column(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: iconSize),
           ),
           const SizedBox(height: 6),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(
+            label, 
+            style: TextStyle(
+              fontSize: isWeb ? 11 : 10, 
+              fontWeight: FontWeight.w600, 
+              color: Colors.grey.shade700
+            )
+          ),
         ],
       ),
     );
@@ -2279,6 +2625,15 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A5276),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          },
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2840,6 +3195,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   File? _capturedImage;
   Uint8List? _capturedImageBytes;
   String? _capturedImagePath;
+  String? _capturedImageName;
 
   final double _latitude = 13.1147;
   final double _longitude = 80.1098;
@@ -2932,6 +3288,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         setState(() {
           _capturedImageBytes = bytes;
           _capturedImagePath = image.path;
+          _capturedImageName = image.name;
           if (!kIsWeb) {
             _capturedImage = File(image.path);
           }
@@ -2962,9 +3319,46 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
     setState(() => _isSubmitting = true);
 
+    // Show simulated premium AI Vision loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 12),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A2540)),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'AI Vision Pipeline Active',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0A2540)),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Analyzing photo alignment and category integrity...',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    if (mounted) {
+      Navigator.pop(context); // Close the AI loader
+    }
+
     final moderationResult = await AIModerationService.validateImage(
       imageBytes: _capturedImageBytes,
       imagePath: _capturedImagePath ?? _capturedImage?.path,
+      imageName: _capturedImageName,
       category: _selectedCategory,
       title: _descController.text,
     );
@@ -3476,7 +3870,8 @@ class SubmissionSuccessScreen extends StatelessWidget {
 // ==========================================
 
 class MyReportsScreen extends StatefulWidget {
-  const MyReportsScreen({super.key});
+  final VoidCallback? onBack;
+  const MyReportsScreen({super.key, this.onBack});
 
   @override
   State<MyReportsScreen> createState() => _MyReportsScreenState();
@@ -3529,7 +3924,16 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A5276),
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!();
+            } else {
+              Navigator.maybePop(context);
+            }
+          },
+        ),
         title: const Text('My Reports',
             style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
@@ -4179,13 +4583,17 @@ class MapGridPainter extends CustomPainter {
 // ==========================================
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onBack;
+  const ProfileScreen({super.key, this.onBack});
 
   @override
   Widget build(BuildContext context) {
     final user = UserStore.instance.currentUser;
     final userName = user != null ? user.name : 'User';
-    final userHandle = user != null ? '@${user.username}' : '@user';
+    final isGoogle = user != null && user.verificationMethod == 'Google';
+    final userHandle = user != null 
+        ? (isGoogle ? '@${user.username.split('@').first}' : '@${user.username}')
+        : '@user';
     final userEmail = user != null ? user.email : 'user@civicreporter.org';
     final userPhone = user != null ? user.mobileNumber : '+91 9876543210';
     final isOfficer = user != null && user.role == 'officer';
@@ -4199,7 +4607,16 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A5276),
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            if (onBack != null) {
+              onBack!();
+            } else {
+              Navigator.maybePop(context);
+            }
+          },
+        ),
         title: const Text('Profile',
             style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
@@ -4229,8 +4646,9 @@ class ProfileScreen extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A5276)),
                   ),
-                  Text(userHandle, style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
+                  Text(userHandle, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                  const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
@@ -4246,13 +4664,44 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.phone, size: 16, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Text(
+                        isGoogle ? 'Google Verified' : userPhone,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
-                  Text('Phone: $userPhone (Verified ✓)', style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.email, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        userEmail,
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                    ],
+                  ),
                   if (user != null && user.aadharNumber.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text('Aadhaar: ${user.aadharNumber} (Verified ✓)', style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.fingerprint, size: 16, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Aadhaar: ${user.aadharNumber}',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                        ),
+                      ],
+                    ),
                   ],
-                  Text(userEmail, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
             ),

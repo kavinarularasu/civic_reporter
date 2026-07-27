@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'env_config.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 /// Result object returned by the AI Image Moderation & Category Verification Pipeline.
 class AIModerationResult {
@@ -38,11 +39,14 @@ class AIModerationService {
   static Future<AIModerationResult> validateImage({
     Uint8List? imageBytes,
     String? imagePath,
+    String? imageName,
     String? category,
     String? title,
   }) async {
     // 1. Image Presence Verification
-    if ((imageBytes == null || imageBytes.isEmpty) && (imagePath == null || imagePath.isEmpty)) {
+    if ((imageBytes == null || imageBytes.isEmpty) && 
+        (imagePath == null || imagePath.isEmpty) && 
+        (imageName == null || imageName.isEmpty)) {
       return AIModerationResult.flagged(
         'AI Verification Error: No photo provided. Please capture or upload a clear photo of the civic issue.',
       );
@@ -51,6 +55,7 @@ class AIModerationService {
     final lowerCategory = (category ?? '').toLowerCase().trim();
     final lowerTitle = (title ?? '').toLowerCase().trim();
     final lowerPath = (imagePath ?? '').toLowerCase().trim();
+    final lowerName = (imageName ?? '').toLowerCase().trim();
 
     // 2. Black Screen / Blank Frame Detection (Byte Variance Inspection)
     if (imageBytes != null && imageBytes.length > 50) {
@@ -71,25 +76,49 @@ class AIModerationService {
         lowerPath.contains('face') ||
         lowerPath.contains('selfie') ||
         lowerPath.contains('passport') ||
-        lowerPath.contains('aadhar')) {
+        lowerPath.contains('aadhar') ||
+        lowerName.contains('face') ||
+        lowerName.contains('selfie') ||
+        lowerName.contains('passport') ||
+        lowerName.contains('aadhar')) {
       return AIModerationResult.flagged(
         'AI Privacy Flag: Uploaded photo contains personal identity or human face details. Please capture only the civic defect.',
       );
     }
 
-    // 4. Off-Topic & Irrelevant Image Detection (Pets, Food, Memes, Screenshots)
+    // 4. Off-Topic & Irrelevant Image Detection (Pets, Food, Memes, Screenshots, Forms)
     if (lowerTitle.contains('cat') ||
         lowerTitle.contains('dog') ||
         lowerTitle.contains('pet') ||
         lowerTitle.contains('food') ||
         lowerTitle.contains('meme') ||
         lowerTitle.contains('game') ||
+        lowerTitle.contains('screenshot') ||
+        lowerTitle.contains('form') ||
+        lowerTitle.contains('doc') ||
         lowerPath.contains('cat') ||
         lowerPath.contains('dog') ||
         lowerPath.contains('meme') ||
-        lowerPath.contains('food')) {
+        lowerPath.contains('food') ||
+        lowerPath.contains('screenshot') ||
+        lowerPath.contains('form') ||
+        lowerName.contains('cat') ||
+        lowerName.contains('dog') ||
+        lowerName.contains('pet') ||
+        lowerName.contains('meme') ||
+        lowerName.contains('food') ||
+        lowerName.contains('screenshot') ||
+        lowerName.contains('form') ||
+        lowerName.contains('sheet') ||
+        lowerName.contains('doc') ||
+        lowerName.contains('pdf') ||
+        lowerName.contains('page') ||
+        lowerName.contains('google') ||
+        lowerName.contains('chrome') ||
+        lowerName.contains('capture') ||
+        lowerName.contains('download')) {
       return AIModerationResult.flagged(
-        'AI Vision Flag: Uploaded photo does not contain civic public infrastructure. Off-topic media (animals, food, memes) is strictly prohibited.',
+        'AI Vision Flag: Uploaded photo does not contain civic public infrastructure. Screenshots, documents, forms, and off-topic media (animals, food, memes) are strictly prohibited.',
       );
     }
 
@@ -99,6 +128,7 @@ class AIModerationService {
         lowerCategory: 'pothole',
         lowerPath: lowerPath,
         lowerTitle: lowerTitle,
+        lowerName: lowerName,
         invalidKeywords: ['light', 'lamp', 'bulb', 'garbage', 'trash', 'drain', 'leak', 'cat', 'food'],
       );
 
@@ -112,6 +142,7 @@ class AIModerationService {
         lowerCategory: 'streetlight',
         lowerPath: lowerPath,
         lowerTitle: lowerTitle,
+        lowerName: lowerName,
         invalidKeywords: ['pothole', 'crater', 'garbage', 'waste', 'drain', 'leak', 'cat', 'food'],
       );
 
@@ -125,6 +156,7 @@ class AIModerationService {
         lowerCategory: 'drain',
         lowerPath: lowerPath,
         lowerTitle: lowerTitle,
+        lowerName: lowerName,
         invalidKeywords: ['streetlight', 'lamp', 'pothole', 'crater', 'garbage', 'trash', 'cat'],
       );
 
@@ -138,6 +170,7 @@ class AIModerationService {
         lowerCategory: 'garbage',
         lowerPath: lowerPath,
         lowerTitle: lowerTitle,
+        lowerName: lowerName,
         invalidKeywords: ['streetlight', 'lamp', 'pothole', 'crater', 'drain', 'leak', 'cat'],
       );
 
@@ -148,12 +181,83 @@ class AIModerationService {
       }
     }
 
-    // 6. External Cloud Vision AI API Call (Google Cloud Vision / OpenAI Vision)
-    if (EnvConfig.visionApiKey.isNotEmpty) {
-      try {
-        debugPrint('Invoking Google Cloud Vision API for $category verification...');
-      } catch (e) {
-        debugPrint('Vision API Exception: $e');
+    // 6. Resilient Hugging Face Image Classification (Microsoft ResNet-50 -> Google ViT)
+    if (imageBytes != null && imageBytes.isNotEmpty) {
+      final modelUrls = [
+        'https://api-inference.huggingface.co/models/microsoft/resnet-50',
+        'https://api-inference.huggingface.co/models/google/vit-base-patch16-224',
+      ];
+
+      List<dynamic>? apiResult;
+      for (var url in modelUrls) {
+        try {
+          final response = await http.post(
+            Uri.parse(url),
+            body: imageBytes,
+          ).timeout(const Duration(seconds: 4));
+
+          if (response.statusCode == 200) {
+            final decoded = jsonDecode(response.body);
+            if (decoded is List) {
+              apiResult = decoded;
+              break;
+            }
+          }
+        } catch (e) {
+          debugPrint('Inference query failed for $url: $e');
+        }
+      }
+
+      if (apiResult != null && apiResult.isNotEmpty) {
+        final topLabels = apiResult.map((e) => (e['label'] as String).toLowerCase()).toList();
+        debugPrint('AI Vision Inference tags detected: $topLabels');
+
+        // Check if it is classified as a website, document, or screen
+        final isWebOrDoc = topLabels.any((l) => l.contains('web site') || l.contains('website') || l.contains('screen') || l.contains('monitor') || l.contains('menu') || l.contains('slate') || l.contains('envelope'));
+        if (isWebOrDoc) {
+          return AIModerationResult.flagged(
+            'AI Vision Flag: The uploaded photo appears to be a screenshot, document, website, or form. Screenshots and electronic documents are strictly prohibited. Please upload a real on-site photo showing the civic defect.',
+          );
+        }
+
+        bool isPotholeModel = topLabels.any((l) => l.contains('pothole') || l.contains('crater') || l.contains('trench') || l.contains('street') || l.contains('road') || l.contains('pavement') || l.contains('dirt') || l.contains('cobblestone'));
+        bool isLightModel = topLabels.any((l) => l.contains('lamp') || l.contains('light') || l.contains('post') || l.contains('fixture') || l.contains('beacon') || l.contains('lantern') || l.contains('spotlight'));
+        bool isDrainModel = topLabels.any((l) => l.contains('manhole') || l.contains('sewer') || l.contains('gutter') || l.contains('drain') || l.contains('water') || l.contains('puddle') || l.contains('conduit') || l.contains('pipe'));
+        bool isGarbageModel = topLabels.any((l) => l.contains('ashbin') || l.contains('trash') || l.contains('garbage') || l.contains('rubbish') || l.contains('waste') || l.contains('pile') || l.contains('bag') || l.contains('container'));
+
+        // Reject if it matches none of our infrastructure elements (off-topic photos, pets, etc.)
+        final hasInfrastructure = isPotholeModel || isLightModel || isDrainModel || isGarbageModel;
+        if (!hasInfrastructure) {
+          return AIModerationResult.flagged(
+            'AI Vision Flag: The uploaded image does not contain civic public infrastructure (detected content: ${topLabels.take(2).join(", ")}). Please upload an on-site photo showing the civic defect.',
+          );
+        }
+
+        if (lowerCategory.contains('pothole')) {
+          if (!isPotholeModel && (isLightModel || isGarbageModel || isDrainModel)) {
+            return AIModerationResult.flagged(
+              'AI Category Mismatch: The uploaded image does not match the selected category "$category". Please upload an authentic photo showing a road pothole or pavement defect.',
+            );
+          }
+        } else if (lowerCategory.contains('streetlight')) {
+          if (!isLightModel && (isPotholeModel || isGarbageModel || isDrainModel)) {
+            return AIModerationResult.flagged(
+              'AI Category Mismatch: The uploaded image does not show a Streetlight or Lamp Post. Please upload a clear photo of the defective streetlight fixture.',
+            );
+          }
+        } else if (lowerCategory.contains('drain')) {
+          if (!isDrainModel && (isPotholeModel || isLightModel || isGarbageModel)) {
+            return AIModerationResult.flagged(
+              'AI Category Mismatch: The uploaded image does not show an Open Drain or Water Leak. Please capture a photo of the open gutter or leaking pipe.',
+            );
+          }
+        } else if (lowerCategory.contains('garbage')) {
+          if (!isGarbageModel && (isPotholeModel || isLightModel || isDrainModel)) {
+            return AIModerationResult.flagged(
+              'AI Category Mismatch: The uploaded image does not match "Garbage" sanitation defect. Please capture a clear photo of the garbage dump or waste bin.',
+            );
+          }
+        }
       }
     }
 
@@ -165,10 +269,11 @@ class AIModerationService {
     required String lowerCategory,
     required String lowerPath,
     required String lowerTitle,
+    required String lowerName,
     required List<String> invalidKeywords,
   }) {
     for (var kw in invalidKeywords) {
-      if (lowerPath.contains(kw) || lowerTitle.contains(kw)) {
+      if (lowerPath.contains(kw) || lowerTitle.contains(kw) || lowerName.contains(kw)) {
         return true;
       }
     }
